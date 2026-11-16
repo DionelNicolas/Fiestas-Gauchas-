@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#234b36">
+  <meta name="description" content="Encontrá domas, jineteadas, bailes y fiestas populares en toda Argentina.">
+  <title>Fiestas gauchas 🇦🇷</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="flag">🇦🇷</span><span>Fiestas gauchas</span></div>
+  <button class="icon-btn" id="profileBtn" aria-label="Perfil">♙</button>
+</header>
+<main>
+  <section class="hero">
+    <p class="eyebrow">TRADICIÓN ARGENTINA</p>
+    <h1>La tradición se vive en cada encuentro.</h1>
+    <p class="sub">Encontrá domas, bailes y fiestas populares en toda Argentina.</p>
+    <label class="search"><span>⌕</span><input id="search" type="search" placeholder="Buscar evento o localidad..." autocomplete="off"></label>
+  </section>
+
+  <nav class="chips" aria-label="Filtrar eventos">
+    <button class="chip active" data-filter="Todos">Todos</button>
+    <button class="chip" data-filter="Doma">Domas</button>
+    <button class="chip" data-filter="Baile">Bailes</button>
+    <button class="chip" data-filter="Fiesta de campo">Fiestas de campo</button>
+  </nav>
+
+  <section class="section-head">
+    <div><p class="eyebrow">AGENDA POPULAR</p><h2>Eventos para descubrir</h2></div>
+    <span id="count" class="count"></span>
+  </section>
+  <section id="events" class="events" aria-live="polite"></section>
+
+  <section class="organizer">
+    <div><p class="eyebrow">¿ORGANIZÁS UN EVENTO?</p><h2>Compartilo con todo el país.</h2>
+    <p>Próximamente vas a poder publicar tu fiesta desde acá.</p></div>
+    <button id="organizerBtn" class="primary">Quiero publicar</button>
+  </section>
+  <p class="disclaimer">Los eventos que aparecen son ejemplos de demostración. Confirmá siempre fecha, lugar y entradas con el organizador.</p>
+</main>
+
+<nav class="bottom-nav">
+  <button class="nav-item selected" data-page="home"><span>⌂</span>Inicio</button>
+  <button class="nav-item" data-page="map"><span>⌖</span>Mapa</button>
+  <button class="nav-item" data-page="saved"><span>♡</span>Guardados</button>
+  <button class="nav-item" data-page="account"><span>♙</span>Cuenta</button>
+</nav>
+
+<dialog id="detailDialog">
+  <button class="close" data-close aria-label="Cerrar">×</button>
+  <div id="detailContent"></div>
+</dialog>
+<dialog id="infoDialog">
+  <button class="close" data-close aria-label="Cerrar">×</button>
+  <h2 id="infoTitle">Próximamente</h2><p id="infoText"></p>
+  <button class="primary full" data-close>Entendido</button>
+</dialog>
+<script src="app.js"></script>
+</body>
+</html>

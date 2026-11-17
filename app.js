@@ -432,4 +432,22 @@ if ('serviceWorker' in navigator) {
 // INICIAR APLICACION
 // =====================================
 
-render();
+// INICIAR APLICACION
+
+try {
+  const caja = document.querySelector('#events');
+
+  if (!caja) {
+    alert('ERROR: No se encontró el contenedor #events');
+  } else {
+    render();
+
+    alert(
+      'Diagnóstico correcto.\n' +
+      'Eventos encontrados: ' +
+      caja.querySelectorAll('.event-card').length
+    );
+  }
+} catch (error) {
+  alert('ERROR EN LA APLICACIÓN: ' + error.message);
+}

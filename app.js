@@ -867,6 +867,15 @@ function setupApp() {
   loadEvents();
 
   console.log('Fiestas Gauchas inicializada correctamente.');
+
+const diagnostic = document.getElementById('fg-diagnostic');
+
+if (diagnostic) {
+  diagnostic.textContent =
+    '¡Prueba exitosa! Fiestas Gauchas está funcionando.';
+  diagnostic.style.background = '#d4edda';
+  diagnostic.style.borderColor = '#28a745';
+}
 }
 
 // ==========================================

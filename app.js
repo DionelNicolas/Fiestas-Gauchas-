@@ -1,7 +1,7 @@
 
 /* ==========================================
    FIESTAS GAUCHAS 🇦🇷
-   APLICACION - VERSION CON SUPABASE
+   APLICACION - SUPABASE
    ========================================== */
 
 // ==========================================
@@ -19,64 +19,13 @@ try {
       SUPABASE_URL,
       SUPABASE_KEY
     );
-    console.log('Supabase conectado.');
+    console.log('Supabase conectado correctamente.');
   } else {
-    console.warn('Supabase no está disponible.');
+    console.error('No se encontró la librería Supabase.');
   }
 } catch (error) {
-  console.error('Error de conexión Supabase:', error);
+  console.error('Error de conexión:', error);
 }
-
-// ==========================================
-// EVENTOS DE DEMOSTRACION
-// ==========================================
-
-const sampleEvents = [
-  {
-    id: 1,
-    title: 'Gran Festival de Doma y Tradición',
-    type: 'Doma',
-    place: 'Mercedes, Corrientes',
-    date: '21 de noviembre',
-    price: 'Precio a confirmar',
-    icon: '🐎',
-    description: 'Jineteadas, música en vivo, comidas regionales y encuentro de tradición gaucha.',
-    isDemo: true
-  },
-  {
-    id: 2,
-    title: 'Noche de Chamamé',
-    type: 'Baile',
-    place: 'Corrientes Capital, Corrientes',
-    date: '27 de noviembre',
-    price: 'Consultar entradas',
-    icon: '🪗',
-    description: 'Una noche para disfrutar de conjuntos chamameceros y baile popular.',
-    isDemo: true
-  },
-  {
-    id: 3,
-    title: 'Fiesta del Encuentro Rural',
-    type: 'Fiesta de campo',
-    place: 'Villaguay, Entre Ríos',
-    date: '29 de noviembre',
-    price: 'Entrada a confirmar',
-    icon: '🌾',
-    description: 'Juegos tradicionales, feria de productores, gastronomía y música.',
-    isDemo: true
-  },
-  {
-    id: 4,
-    title: 'Jineteada y Festival Folclórico',
-    type: 'Doma',
-    place: 'Jesús María, Córdoba',
-    date: '5 de diciembre',
-    price: 'Consultar entradas',
-    icon: '🤠',
-    description: 'Destrezas criollas, payadores y artistas invitados.',
-    isDemo: true
-  }
-];
 
 // ==========================================
 // VARIABLES
@@ -88,7 +37,23 @@ let page = 'home';
 
 let eventsEl;
 let searchInput;
-let allEvents = [...sampleEvents];
+
+// IMPORTANTE: no cargar eventos de demostración.
+let allEvents = [];
+
+// ==========================================
+// SEGURIDAD HTML
+// ==========================================
+
+function escapeHTML(value) {
+  return String(value ?? '').replace(/[&<>"']/g, char => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  })[char]);
+}
 
 // ==========================================
 // ICONOS
@@ -106,14 +71,36 @@ function getEventIcon(category) {
 }
 
 // ==========================================
+// FECHAS
+// ==========================================
+
+function formatDate(date) {
+  if (!date) return 'Fecha a confirmar';
+
+  const parts = String(date).split('-');
+
+  if (parts.length === 3) {
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  }
+
+  return String(date);
+}
+
+// ==========================================
 // CARGAR EVENTOS DESDE SUPABASE
 // ==========================================
 
 async function loadEvents() {
   if (!supabaseClient) {
+    allEvents = [];
     render();
+    showLoadError('No se pudo conectar con Supabase.');
     return;
   }
+
+  eventsEl.innerHTML = `
+    <div class="empty">Cargando eventos...</div>
+  `;
 
   try {
     const { data, error } = await supabaseClient
@@ -124,32 +111,55 @@ async function loadEvents() {
 
     if (error) throw error;
 
-    if (data && data.length > 0) {
-      allEvents = data.map(event => ({
-        id: event.id,
-        title: event.title,
-        type: event.category || 'Evento gaucho',
-        place: [event.locality, event.province]
-          .filter(Boolean).join(', '),
-        date: event.event_date
-          ? new Date(event.event_date + 'T12:00:00')
-              .toLocaleDateString('es-AR')
-          : 'Fecha a confirmar',
-        price: event.price || 'Consultar entradas',
-        icon: getEventIcon(event.category),
-        description: event.description || 'Sin descripción disponible.',
-        isDemo: false
-      }));
-    } else {
-      allEvents = [...sampleEvents];
-    }
+    // Nunca utilizar eventos de demostración.
+    allEvents = (data || []).map(event => ({
+      id: event.id,
+      title: event.title || 'Evento sin título',
+      type: event.category || 'Evento gaucho',
+      place: [
+        event.locality,
+        event.province
+      ].filter(Boolean).join(', ') || 'Ubicación a confirmar',
+      venue: event.venue || '',
+      date: formatDate(event.event_date),
+      price: event.price || 'Consultar entradas',
+      icon: getEventIcon(event.category),
+      description: event.description || 'Sin descripción disponible.',
+      isDemo: false
+    }));
+
+    console.log('Eventos publicados cargados:', allEvents.length);
 
     render();
 
   } catch (error) {
     console.error('Error al cargar eventos:', error);
-    allEvents = [...sampleEvents];
+
+    allEvents = [];
     render();
+
+    showLoadError(
+      'No se pudieron cargar los eventos. Revisá la conexión y los permisos de Supabase. Detalle: ' +
+      error.message
+    );
+  }
+}
+
+function showLoadError(message) {
+  console.error(message);
+
+  const count = document.querySelector('#count');
+
+  if (count) {
+    count.textContent = 'Error al cargar';
+  }
+
+  if (eventsEl) {
+    eventsEl.innerHTML = `
+      <div class="empty">
+        ${escapeHTML(message)}
+      </div>
+    `;
   }
 }
 
@@ -169,7 +179,7 @@ function saveFavorites(ids) {
   try {
     localStorage.setItem('fg_saved', JSON.stringify(ids));
   } catch (error) {
-    console.error('No se pudieron guardar los favoritos:', error);
+    console.error('Error guardando favoritos:', error);
   }
 }
 
@@ -184,8 +194,12 @@ function render() {
     const matchesFilter =
       filter === 'Todos' || event.type === filter;
 
-    const searchable =
-      `${event.title} ${event.place} ${event.type}`.toLowerCase();
+    const searchable = `
+      ${event.title}
+      ${event.place}
+      ${event.type}
+      ${event.description}
+    `.toLowerCase();
 
     const matchesSearch = searchable.includes(query);
 
@@ -194,9 +208,9 @@ function render() {
 
   if (page === 'saved') {
     const favorites = getSaved();
+
     list = list.filter(event =>
-      favorites.includes(event.id) ||
-      favorites.includes(String(event.id))
+      favorites.some(id => String(id) === String(event.id))
     );
   }
 
@@ -209,26 +223,39 @@ function render() {
   if (list.length === 0) {
     eventsEl.innerHTML = `
       <div class="empty">
-        No hay eventos para mostrar con esta búsqueda.
+        ${allEvents.length === 0
+          ? 'Todavía no hay eventos publicados.'
+          : 'No hay eventos para mostrar con esta búsqueda.'}
       </div>
     `;
     return;
   }
 
   eventsEl.innerHTML = list.map(event => `
-    <article class="event-card" data-id="${event.id}">
+    <article class="event-card" data-id="${escapeHTML(event.id)}">
+
       <div class="event-art">${event.icon}</div>
 
       <div class="event-info">
-        <div class="tag">${event.type}</div>
-        <h3>${event.title}</h3>
-        <p class="meta">📍 ${event.place}</p>
-        <p class="meta">📅 ${event.date}</p>
-        <div class="price">${event.price}</div>
-        ${event.isDemo ? '<small>Evento demostrativo</small>' : ''}
+        <div class="tag">${escapeHTML(event.type)}</div>
+
+        <h3>${escapeHTML(event.title)}</h3>
+
+        <p class="meta">
+          📍 ${escapeHTML(event.place)}
+        </p>
+
+        <p class="meta">
+          📅 ${escapeHTML(event.date)}
+        </p>
+
+        <div class="price">
+          ${escapeHTML(event.price)}
+        </div>
       </div>
 
       <div class="arrow">›</div>
+
     </article>
   `).join('');
 }
@@ -249,19 +276,34 @@ function openDetail(event) {
 
   detail.innerHTML = `
     <div class="detail-art">${event.icon}</div>
-    <div class="tag">${event.type}</div>
-    <h2 class="detail-title">${event.title}</h2>
-    <p class="meta">📍 ${event.place}</p>
-    <p class="meta">📅 ${event.date}</p>
-    <p class="price">${event.price}</p>
-    <p class="detail-copy">${event.description}</p>
 
-    ${event.isDemo ? `
-      <p class="detail-copy">
-        <strong>Atención:</strong>
-        publicación demostrativa. Los datos no representan una convocatoria confirmada.
+    <div class="tag">${escapeHTML(event.type)}</div>
+
+    <h2 class="detail-title">
+      ${escapeHTML(event.title)}
+    </h2>
+
+    <p class="meta">
+      📍 ${escapeHTML(event.place)}
+    </p>
+
+    ${event.venue ? `
+      <p class="meta">
+        📌 ${escapeHTML(event.venue)}
       </p>
     ` : ''}
+
+    <p class="meta">
+      📅 ${escapeHTML(event.date)}
+    </p>
+
+    <p class="price">
+      ${escapeHTML(event.price)}
+    </p>
+
+    <p class="detail-copy">
+      ${escapeHTML(event.description)}
+    </p>
 
     <button class="primary full" id="saveBtn">
       ${isSaved ? '♥ Quitar de guardados' : '♡ Guardar evento'}
@@ -288,7 +330,9 @@ function openDetail(event) {
     });
   }
 
-  if (!dialog.open) dialog.showModal();
+  if (!dialog.open) {
+    dialog.showModal();
+  }
 }
 
 // ==========================================
@@ -308,11 +352,13 @@ function info(title, message) {
   titleEl.textContent = title;
   textEl.textContent = message;
 
-  if (!dialog.open) dialog.showModal();
+  if (!dialog.open) {
+    dialog.showModal();
+  }
 }
 
 // ==========================================
-// BUSCADOR Y FILTROS
+// BUSCADOR
 // ==========================================
 
 function setupSearch() {
@@ -326,15 +372,22 @@ function setupSearch() {
   });
 }
 
+// ==========================================
+// FILTROS
+// ==========================================
+
 function setupFilters() {
   document.querySelectorAll('.chip').forEach(button => {
     button.addEventListener('click', () => {
+
       document.querySelectorAll('.chip').forEach(item => {
         item.classList.remove('active');
       });
 
       button.classList.add('active');
+
       filter = button.dataset.filter || 'Todos';
+
       render();
     });
   });
@@ -348,6 +401,7 @@ function setupDialogs() {
   document.querySelectorAll('[data-close]').forEach(button => {
     button.addEventListener('click', () => {
       const dialog = button.closest('dialog');
+
       if (dialog) dialog.close();
     });
   });
@@ -384,7 +438,9 @@ async function accountAccess() {
 
       if (option === '2') {
         const result = await supabaseClient.auth.signOut();
+
         if (result.error) throw result.error;
+
         alert('Sesión cerrada correctamente.');
       }
 
@@ -407,6 +463,7 @@ async function accountAccess() {
     }
 
     const password = prompt('Ingresá tu contraseña:');
+
     if (!password) return;
 
     if (option === '1') {
@@ -437,6 +494,7 @@ async function accountAccess() {
         });
 
       if (result.error) throw result.error;
+
       alert('¡Bienvenido a Fiestas gauchas!');
     }
 
@@ -452,6 +510,7 @@ async function accountAccess() {
 function setupNavigation() {
   document.querySelectorAll('.nav-item').forEach(button => {
     button.addEventListener('click', () => {
+
       page = button.dataset.page || 'home';
 
       document.querySelectorAll('.nav-item').forEach(item => {
@@ -482,9 +541,11 @@ function setupNavigation() {
 
 function setupOrganizer() {
   const button = document.querySelector('#organizerBtn');
+
   if (!button) return;
 
   button.addEventListener('click', async () => {
+
     if (!supabaseClient) {
       alert('No se pudo conectar con Supabase.');
       return;
@@ -518,6 +579,7 @@ function setupOrganizer() {
 
 function setupProfile() {
   const button = document.querySelector('#profileBtn');
+
   if (!button) return;
 
   button.addEventListener('click', accountAccess);
@@ -544,14 +606,18 @@ function startApp() {
     setupProfile();
 
     eventsEl.addEventListener('click', event => {
+
       const card = event.target.closest('[data-id]');
+
       if (!card) return;
 
       const selectedEvent = allEvents.find(
         item => String(item.id) === card.dataset.id
       );
 
-      if (selectedEvent) openDetail(selectedEvent);
+      if (selectedEvent) {
+        openDetail(selectedEvent);
+      }
     });
 
     if (supabaseClient) {
@@ -566,6 +632,7 @@ function startApp() {
 
   } catch (error) {
     console.error('Error al iniciar la aplicación:', error);
+
     alert('Error al iniciar Fiestas gauchas: ' + error.message);
   }
 }

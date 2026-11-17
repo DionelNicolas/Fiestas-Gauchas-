@@ -13,9 +13,18 @@ if (!window.supabase) {
   alert('No se pudo cargar Supabase. Revisá la conexión.');
 }
 
-const supabase = window.supabase
-  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
-  : null;
+let supabase = null;
+
+try {
+  if (window.supabase) {
+    supabase = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
+    );
+  }
+} catch (error) {
+  console.error('Error de Supabase:', error);
+}
 
 
 // =====================================

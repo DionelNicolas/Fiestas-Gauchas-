@@ -1,10 +1,10 @@
 
 /* ==========================================
    FIESTAS GAUCHAS 🇦🇷
-   APLICACIÓN - SUPABASE
+   APLICACIÓN COMPLETA - SUPABASE
+   BLOQUE 1 DE 2
    ========================================== */
 
-// CONFIGURACIÓN SUPABASE
 const SUPABASE_URL = 'https://azaimadkqssbsljpjdqo.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_UWmpG4BAoWVOJWuzVBppgQ_lwPXbUyP';
 
@@ -213,7 +213,6 @@ function render() {
             : 'No hay eventos para mostrar con esta búsqueda.'}
       </div>
     `;
-
     return;
   }
 
@@ -254,7 +253,6 @@ function openDetail(event) {
 
   detail.innerHTML = `
     <div class="detail-art">${event.icon}</div>
-
     <div class="tag">${escapeHTML(event.type)}</div>
 
     <h2 class="detail-title">
@@ -268,7 +266,6 @@ function openDetail(event) {
     ` : ''}
 
     <p class="meta">📅 ${escapeHTML(event.date)}</p>
-
     <p class="price">${escapeHTML(event.price)}</p>
 
     <p class="detail-copy">
@@ -361,16 +358,13 @@ async function checkAdmin() {
     if (error) throw error;
 
     const isAdmin = data === true;
-
     updateAdminButton(isAdmin);
 
     return isAdmin;
 
   } catch (error) {
     console.error('Error comprobando administrador:', error);
-
     updateAdminButton(false);
-
     return false;
   }
 }
@@ -391,7 +385,6 @@ function createAdminButton() {
   if (!organizer || adminButton) return;
 
   adminButton = document.createElement('button');
-
   adminButton.id = 'adminPanelBtn';
   adminButton.className = 'primary';
   adminButton.type = 'button';
@@ -438,18 +431,15 @@ async function requestOrganizer() {
         labels[existing.status] ||
         'Ya tenés una solicitud registrada.'
       );
-
       return;
     }
 
     const fullName = prompt('Ingresá tu nombre y apellido:');
-
     if (!fullName || !fullName.trim()) return;
 
     const organization = prompt(
       'Ingresá el nombre de tu agrupación, institución u organización:'
     );
-
     if (!organization || !organization.trim()) return;
 
     const phone = prompt('Ingresá tu número de teléfono:') || '';
@@ -478,10 +468,7 @@ async function requestOrganizer() {
 
   } catch (error) {
     console.error(error);
-
-    alert(
-      'No se pudo enviar la solicitud: ' + error.message
-    );
+    alert('No se pudo enviar la solicitud: ' + error.message);
   }
 }
 
@@ -507,10 +494,7 @@ async function checkMyRequest() {
     if (error) throw error;
 
     if (!data) {
-      alert(
-        'Todavía no enviaste una solicitud para ser organizador.'
-      );
-
+      alert('Todavía no enviaste una solicitud para ser organizador.');
       return;
     }
 
@@ -528,9 +512,7 @@ async function checkMyRequest() {
     );
 
   } catch (error) {
-    alert(
-      'Error consultando solicitud: ' + error.message
-    );
+    alert('Error consultando solicitud: ' + error.message);
   }
 }
 
@@ -570,7 +552,10 @@ function createAdminDialog() {
     .addEventListener('click', () => adminDialog.close());
 }
 
-// ABRIR PANEL
+// ==========================================
+// ABRIR PANEL ADMINISTRADOR
+// ==========================================
+
 async function openAdminPanel() {
   const isAdmin = await checkAdmin();
 
@@ -588,7 +573,10 @@ async function openAdminPanel() {
   loadAdminRequests();
 }
 
+// ==========================================
 // CARGAR SOLICITUDES
+// ==========================================
+
 async function loadAdminRequests() {
   const container = document.querySelector('#adminRequests');
 
@@ -608,7 +596,6 @@ async function loadAdminRequests() {
       container.innerHTML = `
         <p>No hay solicitudes de organizadores.</p>
       `;
-
       return;
     }
 
@@ -694,7 +681,10 @@ async function loadAdminRequests() {
   }
 }
 
-// APROBAR O RECHAZAR
+// ==========================================
+// APROBAR O RECHAZAR ORGANIZADORES
+// ==========================================
+
 async function updateOrganizerRequest(id, status) {
   const actionText = status === 'approved'
     ? 'aprobar'
@@ -722,10 +712,7 @@ async function updateOrganizerRequest(id, status) {
 
   } catch (error) {
     console.error(error);
-
-    alert(
-      'No se pudo actualizar la solicitud: ' + error.message
-    );
+    alert('No se pudo actualizar la solicitud: ' + error.message);
   }
 }
 
@@ -756,7 +743,7 @@ async function accountAccess() {
 
         alert('Sesión cerrada correctamente.');
 
-        updateAccountButton();
+        await updateAccountButton();
         updateAdminButton(false);
       }
 
@@ -825,7 +812,10 @@ async function accountAccess() {
   }
 }
 
+// ==========================================
 // ACTUALIZAR BOTÓN DE CUENTA
+// ==========================================
+
 async function updateAccountButton() {
   const button = document.querySelector('#profileBtn');
 
@@ -867,8 +857,173 @@ function setupNavigation() {
         button.classList.add('active');
 
         if (page === 'map') {
-  info(
-    'Mapa',
-    'La sección del mapa estará disponible próximamente.'
-  );
+          info(
+            'Mapa',
+            'La sección del mapa estará disponible próximamente.'
+          );
         }
+
+        if (page === 'account') {
+          await accountAccess();
+        }
+
+        render();
+      });
+
+    });
+}
+
+// ==========================================
+// BÚSQUEDA
+// ==========================================
+
+function setupSearch() {
+  searchInput = document.querySelector('#search');
+
+  if (!searchInput) return;
+
+  searchInput.addEventListener('input', () => {
+    query = searchInput.value.trim().toLowerCase();
+    render();
+  });
+}
+
+// ==========================================
+// FILTROS
+// ==========================================
+
+function setupFilters() {
+  document.querySelectorAll('.chip[data-filter]')
+    .forEach(button => {
+
+      button.addEventListener('click', () => {
+        filter = button.dataset.filter || 'Todos';
+
+        document.querySelectorAll('.chip[data-filter]')
+          .forEach(item => {
+            item.classList.remove('active', 'selected');
+          });
+
+        button.classList.add('active');
+
+        render();
+      });
+
+    });
+}
+
+// ==========================================
+// CLIC EN EVENTOS
+// ==========================================
+
+function setupEventClicks() {
+  if (!eventsEl) return;
+
+  eventsEl.addEventListener('click', event => {
+    const card = event.target.closest('.event-card');
+
+    if (!card) return;
+
+    const selectedEvent = allEvents.find(
+      item => String(item.id) === String(card.dataset.id)
+    );
+
+    if (selectedEvent) {
+      openDetail(selectedEvent);
+    }
+  });
+
+  eventsEl.addEventListener('keydown', event => {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+
+    const card = event.target.closest('.event-card');
+
+    if (!card) return;
+
+    event.preventDefault();
+
+    const selectedEvent = allEvents.find(
+      item => String(item.id) === String(card.dataset.id)
+    );
+
+    if (selectedEvent) {
+      openDetail(selectedEvent);
+    }
+  });
+}
+
+// ==========================================
+// BOTONES GENERALES
+// ==========================================
+
+function setupButtons() {
+  const profileButton = document.querySelector('#profileBtn');
+
+  if (profileButton) {
+    profileButton.addEventListener('click', accountAccess);
+  }
+
+  const organizer = document.querySelector('#organizerBtn');
+
+  if (organizer) {
+    organizer.addEventListener('click', requestOrganizer);
+  }
+
+  document.querySelectorAll('[data-close]')
+    .forEach(button => {
+      button.addEventListener('click', () => {
+        const dialog = button.closest('dialog');
+
+        if (dialog && dialog.open) {
+          dialog.close();
+        }
+      });
+    });
+}
+
+// ==========================================
+// INICIALIZACIÓN DE LA APLICACIÓN
+// ==========================================
+
+async function setupApp() {
+  console.log('Iniciando Fiestas Gauchas...');
+
+  eventsEl = document.querySelector('#events');
+
+  if (!eventsEl) {
+    console.error('No se encontró el contenedor de eventos.');
+    return;
+  }
+
+  createAdminButton();
+
+  setupNavigation();
+  setupSearch();
+  setupFilters();
+  setupEventClicks();
+  setupButtons();
+
+  await updateAccountButton();
+  await checkAdmin();
+
+  await loadEvents();
+
+  const diagnostic = document.querySelector('#fg-diagnostic');
+
+  if (diagnostic) {
+    diagnostic.textContent =
+      'Diagnóstico: aplicación cargada correctamente.';
+  }
+
+  console.log('Fiestas Gauchas está funcionando.');
+}
+
+// ==========================================
+// INICIAR CUANDO CARGUE EL DOCUMENTO
+// ==========================================
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', setupApp);
+} else {
+  setupApp();
+}

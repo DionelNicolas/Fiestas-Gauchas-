@@ -1,7 +1,7 @@
 
 /* ==========================================
    FIESTAS GAUCHAS 🇦🇷
-   APLICACION - VERSION CORREGIDA
+   APLICACION - VERSION CON SUPABASE
    ========================================== */
 
 // ==========================================
@@ -9,8 +9,6 @@
 // ==========================================
 
 const SUPABASE_URL = 'https://azaimadkqssbsljpjdqo.supabase.co';
-
-// Pegá aquí tu misma Publishable Key de Supabase
 const SUPABASE_KEY = 'sb_publishable_UWmpG4BAoWVOJWuzVBppgQ_lwPXbUyP';
 
 let supabaseClient = null;
@@ -23,17 +21,78 @@ try {
     );
     console.log('Supabase conectado.');
   } else {
-    console.warn('Supabase no está disponible. La aplicación seguirá funcionando.');
+    console.warn('Supabase no está disponible.');
   }
 } catch (error) {
   console.error('Error de conexión Supabase:', error);
 }
 
-
 // ==========================================
 // EVENTOS DE DEMOSTRACION
 // ==========================================
-let allEvents = sampleEvents;
+
+const sampleEvents = [
+  {
+    id: 1,
+    title: 'Gran Festival de Doma y Tradición',
+    type: 'Doma',
+    place: 'Mercedes, Corrientes',
+    date: '21 de noviembre',
+    price: 'Precio a confirmar',
+    icon: '🐎',
+    description: 'Jineteadas, música en vivo, comidas regionales y encuentro de tradición gaucha.',
+    isDemo: true
+  },
+  {
+    id: 2,
+    title: 'Noche de Chamamé',
+    type: 'Baile',
+    place: 'Corrientes Capital, Corrientes',
+    date: '27 de noviembre',
+    price: 'Consultar entradas',
+    icon: '🪗',
+    description: 'Una noche para disfrutar de conjuntos chamameceros y baile popular.',
+    isDemo: true
+  },
+  {
+    id: 3,
+    title: 'Fiesta del Encuentro Rural',
+    type: 'Fiesta de campo',
+    place: 'Villaguay, Entre Ríos',
+    date: '29 de noviembre',
+    price: 'Entrada a confirmar',
+    icon: '🌾',
+    description: 'Juegos tradicionales, feria de productores, gastronomía y música.',
+    isDemo: true
+  },
+  {
+    id: 4,
+    title: 'Jineteada y Festival Folclórico',
+    type: 'Doma',
+    place: 'Jesús María, Córdoba',
+    date: '5 de diciembre',
+    price: 'Consultar entradas',
+    icon: '🤠',
+    description: 'Destrezas criollas, payadores y artistas invitados.',
+    isDemo: true
+  }
+];
+
+// ==========================================
+// VARIABLES
+// ==========================================
+
+let filter = 'Todos';
+let query = '';
+let page = 'home';
+
+let eventsEl;
+let searchInput;
+let allEvents = [...sampleEvents];
+
+// ==========================================
+// ICONOS
+// ==========================================
 
 function getEventIcon(category) {
   const icons = {
@@ -46,8 +105,15 @@ function getEventIcon(category) {
   return icons[category] || '🤠';
 }
 
+// ==========================================
+// CARGAR EVENTOS DESDE SUPABASE
+// ==========================================
+
 async function loadEvents() {
-  if (!supabaseClient) return;
+  if (!supabaseClient) {
+    render();
+    return;
+  }
 
   try {
     const { data, error } = await supabaseClient
@@ -74,71 +140,18 @@ async function loadEvents() {
         description: event.description || 'Sin descripción disponible.',
         isDemo: false
       }));
+    } else {
+      allEvents = [...sampleEvents];
     }
 
     render();
 
   } catch (error) {
     console.error('Error al cargar eventos:', error);
-    allEvents = sampleEvents;
+    allEvents = [...sampleEvents];
     render();
   }
 }
-const sampleEvents = [
-  {
-    id: 1,
-    title: 'Gran Festival de Doma y Tradición',
-    type: 'Doma',
-    place: 'Mercedes, Corrientes',
-    date: '21 de noviembre',
-    price: 'Precio a confirmar',
-    icon: '🐎',
-    description: 'Jineteadas, música en vivo, comidas regionales y encuentro de tradición gaucha.'
-  },
-  {
-    id: 2,
-    title: 'Noche de Chamamé',
-    type: 'Baile',
-    place: 'Corrientes Capital, Corrientes',
-    date: '27 de noviembre',
-    price: 'Consultar entradas',
-    icon: '🪗',
-    description: 'Una noche para disfrutar de conjuntos chamameceros y baile popular.'
-  },
-  {
-    id: 3,
-    title: 'Fiesta del Encuentro Rural',
-    type: 'Fiesta de campo',
-    place: 'Villaguay, Entre Ríos',
-    date: '29 de noviembre',
-    price: 'Entrada a confirmar',
-    icon: '🌾',
-    description: 'Juegos tradicionales, feria de productores, gastronomía y música.'
-  },
-  {
-    id: 4,
-    title: 'Jineteada y Festival Folclórico',
-    type: 'Doma',
-    place: 'Jesús María, Córdoba',
-    date: '5 de diciembre',
-    price: 'Consultar entradas',
-    icon: '🤠',
-    description: 'Destrezas criollas, payadores y artistas invitados.'
-  }
-];
-
-
-// ==========================================
-// VARIABLES
-// ==========================================
-
-let filter = 'Todos';
-let query = '';
-let page = 'home';
-
-let eventsEl;
-let searchInput;
-
 
 // ==========================================
 // FAVORITOS
@@ -160,18 +173,14 @@ function saveFavorites(ids) {
   }
 }
 
-
 // ==========================================
 // MOSTRAR EVENTOS
 // ==========================================
 
 function render() {
-  if (!eventsEl) {
-    console.error('No se encontró #events');
-    return;
-  }
+  if (!eventsEl) return;
 
-  let list = sampleEvents.filter(event => {
+  let list = allEvents.filter(event => {
     const matchesFilter =
       filter === 'Todos' || event.type === filter;
 
@@ -185,7 +194,10 @@ function render() {
 
   if (page === 'saved') {
     const favorites = getSaved();
-    list = list.filter(event => favorites.includes(event.id));
+    list = list.filter(event =>
+      favorites.includes(event.id) ||
+      favorites.includes(String(event.id))
+    );
   }
 
   const count = document.querySelector('#count');
@@ -213,13 +225,13 @@ function render() {
         <p class="meta">📍 ${event.place}</p>
         <p class="meta">📅 ${event.date}</p>
         <div class="price">${event.price}</div>
+        ${event.isDemo ? '<small>Evento demostrativo</small>' : ''}
       </div>
 
       <div class="arrow">›</div>
     </article>
   `).join('');
 }
-
 
 // ==========================================
 // DETALLE DE EVENTOS
@@ -229,31 +241,27 @@ function openDetail(event) {
   const detail = document.querySelector('#detailContent');
   const dialog = document.querySelector('#detailDialog');
 
-  if (!detail || !dialog) {
-    console.error('No se encontró la ventana de detalles.');
-    return;
-  }
+  if (!detail || !dialog) return;
 
-  const isSaved = getSaved().includes(event.id);
+  const isSaved = getSaved().some(
+    id => String(id) === String(event.id)
+  );
 
   detail.innerHTML = `
     <div class="detail-art">${event.icon}</div>
-
     <div class="tag">${event.type}</div>
-
     <h2 class="detail-title">${event.title}</h2>
-
     <p class="meta">📍 ${event.place}</p>
     <p class="meta">📅 ${event.date}</p>
-
     <p class="price">${event.price}</p>
-
     <p class="detail-copy">${event.description}</p>
 
-    <p class="detail-copy">
-      <strong>Atención:</strong>
-      publicación demostrativa. Los datos no representan una convocatoria confirmada.
-    </p>
+    ${event.isDemo ? `
+      <p class="detail-copy">
+        <strong>Atención:</strong>
+        publicación demostrativa. Los datos no representan una convocatoria confirmada.
+      </p>
+    ` : ''}
 
     <button class="primary full" id="saveBtn">
       ${isSaved ? '♥ Quitar de guardados' : '♡ Guardar evento'}
@@ -266,24 +274,22 @@ function openDetail(event) {
     saveButton.addEventListener('click', () => {
       let favorites = getSaved();
 
-      if (favorites.includes(event.id)) {
-        favorites = favorites.filter(id => id !== event.id);
+      if (favorites.some(id => String(id) === String(event.id))) {
+        favorites = favorites.filter(
+          id => String(id) !== String(event.id)
+        );
       } else {
         favorites.push(event.id);
       }
 
       saveFavorites(favorites);
-
       openDetail(event);
       render();
     });
   }
 
-  if (!dialog.open) {
-    dialog.showModal();
-  }
+  if (!dialog.open) dialog.showModal();
 }
-
 
 // ==========================================
 // VENTANAS INFORMATIVAS
@@ -302,11 +308,8 @@ function info(title, message) {
   titleEl.textContent = title;
   textEl.textContent = message;
 
-  if (!dialog.open) {
-    dialog.showModal();
-  }
+  if (!dialog.open) dialog.showModal();
 }
-
 
 // ==========================================
 // BUSCADOR Y FILTROS
@@ -331,14 +334,11 @@ function setupFilters() {
       });
 
       button.classList.add('active');
-
       filter = button.dataset.filter || 'Todos';
-
       render();
     });
   });
 }
-
 
 // ==========================================
 // CERRAR VENTANAS
@@ -348,12 +348,10 @@ function setupDialogs() {
   document.querySelectorAll('[data-close]').forEach(button => {
     button.addEventListener('click', () => {
       const dialog = button.closest('dialog');
-
       if (dialog) dialog.close();
     });
   });
 }
-
 
 // ==========================================
 // CUENTAS DE USUARIO
@@ -361,7 +359,7 @@ function setupDialogs() {
 
 async function accountAccess() {
   if (!supabaseClient) {
-    alert('No se pudo conectar con Supabase. Revisá la conexión.');
+    alert('No se pudo conectar con Supabase.');
     return;
   }
 
@@ -386,9 +384,7 @@ async function accountAccess() {
 
       if (option === '2') {
         const result = await supabaseClient.auth.signOut();
-
         if (result.error) throw result.error;
-
         alert('Sesión cerrada correctamente.');
       }
 
@@ -411,7 +407,6 @@ async function accountAccess() {
     }
 
     const password = prompt('Ingresá tu contraseña:');
-
     if (!password) return;
 
     if (option === '1') {
@@ -427,13 +422,11 @@ async function accountAccess() {
 
       if (result.error) throw result.error;
 
-      if (result.data.session) {
-        alert('¡Tu cuenta fue creada correctamente!');
-      } else {
-        alert(
-          'Registro realizado. Revisá tu correo para confirmar la cuenta.'
-        );
-      }
+      alert(
+        result.data.session
+          ? '¡Tu cuenta fue creada correctamente!'
+          : 'Registro realizado. Revisá tu correo para confirmar la cuenta.'
+      );
     }
 
     if (option === '2') {
@@ -444,7 +437,6 @@ async function accountAccess() {
         });
 
       if (result.error) throw result.error;
-
       alert('¡Bienvenido a Fiestas gauchas!');
     }
 
@@ -452,7 +444,6 @@ async function accountAccess() {
     alert('No se pudo completar la operación: ' + error.message);
   }
 }
-
 
 // ==========================================
 // NAVEGACION
@@ -485,14 +476,12 @@ function setupNavigation() {
   });
 }
 
-
 // ==========================================
 // ORGANIZADORES
 // ==========================================
 
 function setupOrganizer() {
   const button = document.querySelector('#organizerBtn');
-
   if (!button) return;
 
   button.addEventListener('click', async () => {
@@ -523,19 +512,16 @@ function setupOrganizer() {
   });
 }
 
-
 // ==========================================
 // PERFIL
 // ==========================================
 
 function setupProfile() {
   const button = document.querySelector('#profileBtn');
-
   if (!button) return;
 
   button.addEventListener('click', accountAccess);
 }
-
 
 // ==========================================
 // INICIO DE LA APLICACION
@@ -559,16 +545,13 @@ function startApp() {
 
     eventsEl.addEventListener('click', event => {
       const card = event.target.closest('[data-id]');
-
       if (!card) return;
 
-      const selectedEvent = sampleEvents.find(
-        item => item.id === Number(card.dataset.id)
+      const selectedEvent = allEvents.find(
+        item => String(item.id) === card.dataset.id
       );
 
-      if (selectedEvent) {
-        openDetail(selectedEvent);
-      }
+      if (selectedEvent) openDetail(selectedEvent);
     });
 
     if (supabaseClient) {
@@ -577,7 +560,7 @@ function startApp() {
       });
     }
 
-    render();
+    loadEvents();
 
     console.log('Fiestas gauchas inició correctamente.');
 
@@ -587,8 +570,6 @@ function startApp() {
   }
 }
 
-
-// Esperar a que el documento esté preparado
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', startApp);
 } else {

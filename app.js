@@ -18,6 +18,10 @@ let allEvents = [];
 let adminDialog = null;
 let adminButton = null;
 
+// ==========================================
+// CONEXIÓN SUPABASE
+// ==========================================
+
 try {
   if (window.supabase) {
     supabaseClient = window.supabase.createClient(
@@ -32,7 +36,10 @@ try {
   console.error('Error al iniciar Supabase:', error);
 }
 
-// SEGURIDAD HTML
+// ==========================================
+// FUNCIONES GENERALES
+// ==========================================
+
 function escapeHTML(value) {
   return String(value ?? '').replace(/[&<>"']/g, char => ({
     '&': '&amp;',
@@ -43,7 +50,6 @@ function escapeHTML(value) {
   })[char]);
 }
 
-// ICONOS
 function getEventIcon(category) {
   const icons = {
     'Doma': '🐎',
@@ -51,19 +57,24 @@ function getEventIcon(category) {
     'Fiesta de campo': '🌾',
     'Festival': '🎶'
   };
+
   return icons[category] || '🤠';
 }
 
-// FECHAS
 function formatDate(date) {
   if (!date) return 'Fecha a confirmar';
+
   const parts = String(date).split('-');
+
   return parts.length === 3
     ? `${parts[2]}/${parts[1]}/${parts[0]}`
     : String(date);
 }
 
+// ==========================================
 // CARGAR EVENTOS
+// ==========================================
+
 async function loadEvents() {
   if (!eventsEl) return;
 
@@ -74,7 +85,8 @@ async function loadEvents() {
     return;
   }
 
-  eventsEl.innerHTML = '<div class="empty">Cargando eventos...</div>';
+  eventsEl.innerHTML =
+    '<div class="empty">Cargando eventos...</div>';
 
   try {
     const { data, error } = await supabaseClient
@@ -101,12 +113,15 @@ async function loadEvents() {
     }));
 
     render();
+
     console.log('Eventos publicados:', allEvents.length);
 
   } catch (error) {
     console.error('Error al cargar eventos:', error);
+
     allEvents = [];
     render();
+
     showLoadError(
       'No se pudieron cargar los eventos. Detalle: ' +
       (error.message || error)
@@ -116,7 +131,10 @@ async function loadEvents() {
 
 function showLoadError(message) {
   const count = document.querySelector('#count');
-  if (count) count.textContent = 'Error al cargar';
+
+  if (count) {
+    count.textContent = 'Error al cargar';
+  }
 
   if (eventsEl) {
     eventsEl.innerHTML = `
@@ -125,13 +143,18 @@ function showLoadError(message) {
   }
 }
 
+// ==========================================
 // FAVORITOS
+// ==========================================
+
 function getSaved() {
   try {
     const value = JSON.parse(
       localStorage.getItem('fg_saved') || '[]'
     );
+
     return Array.isArray(value) ? value : [];
+
   } catch (_) {
     return [];
   }
@@ -145,7 +168,10 @@ function saveFavorites(ids) {
   }
 }
 
+// ==========================================
 // MOSTRAR EVENTOS
+// ==========================================
+
 function render() {
   if (!eventsEl) return;
 
@@ -165,13 +191,17 @@ function render() {
 
   if (page === 'saved') {
     const favorites = getSaved();
+
     list = list.filter(event =>
       favorites.some(id => String(id) === String(event.id))
     );
   }
 
   const count = document.querySelector('#count');
-  if (count) count.textContent = `${list.length} eventos`;
+
+  if (count) {
+    count.textContent = `${list.length} eventos`;
+  }
 
   if (!list.length) {
     eventsEl.innerHTML = `
@@ -183,6 +213,7 @@ function render() {
             : 'No hay eventos para mostrar con esta búsqueda.'}
       </div>
     `;
+
     return;
   }
 
@@ -207,7 +238,10 @@ function render() {
   `).join('');
 }
 
+// ==========================================
 // DETALLE DE EVENTOS
+// ==========================================
+
 function openDetail(event) {
   const detail = document.querySelector('#detailContent');
   const dialog = document.querySelector('#detailDialog');
@@ -220,8 +254,13 @@ function openDetail(event) {
 
   detail.innerHTML = `
     <div class="detail-art">${event.icon}</div>
+
     <div class="tag">${escapeHTML(event.type)}</div>
-    <h2 class="detail-title">${escapeHTML(event.title)}</h2>
+
+    <h2 class="detail-title">
+      ${escapeHTML(event.title)}
+    </h2>
+
     <p class="meta">📍 ${escapeHTML(event.place)}</p>
 
     ${event.venue ? `
@@ -229,34 +268,45 @@ function openDetail(event) {
     ` : ''}
 
     <p class="meta">📅 ${escapeHTML(event.date)}</p>
+
     <p class="price">${escapeHTML(event.price)}</p>
-    <p class="detail-copy">${escapeHTML(event.description)}</p>
+
+    <p class="detail-copy">
+      ${escapeHTML(event.description)}
+    </p>
 
     <button class="primary full" id="saveBtn">
       ${isSaved ? '♥ Quitar de guardados' : '♡ Guardar evento'}
     </button>
   `;
 
-  detail.querySelector('#saveBtn')?.addEventListener('click', () => {
-    let favorites = getSaved();
+  detail.querySelector('#saveBtn')
+    ?.addEventListener('click', () => {
 
-    if (favorites.some(id => String(id) === String(event.id))) {
-      favorites = favorites.filter(
-        id => String(id) !== String(event.id)
-      );
-    } else {
-      favorites.push(event.id);
-    }
+      let favorites = getSaved();
 
-    saveFavorites(favorites);
-    render();
-    openDetail(event);
-  });
+      if (favorites.some(id => String(id) === String(event.id))) {
+        favorites = favorites.filter(
+          id => String(id) !== String(event.id)
+        );
+      } else {
+        favorites.push(event.id);
+      }
 
-  if (!dialog.open) dialog.showModal();
+      saveFavorites(favorites);
+      render();
+      openDetail(event);
+    });
+
+  if (!dialog.open) {
+    dialog.showModal();
+  }
 }
 
+// ==========================================
 // VENTANAS INFORMATIVAS
+// ==========================================
+
 function info(title, message) {
   const titleEl = document.querySelector('#infoTitle');
   const textEl = document.querySelector('#infoText');
@@ -270,10 +320,15 @@ function info(title, message) {
   titleEl.textContent = title;
   textEl.textContent = message;
 
-  if (!dialog.open) dialog.showModal();
+  if (!dialog.open) {
+    dialog.showModal();
+  }
 }
 
-// SESIÓN
+// ==========================================
+// SESIÓN DE USUARIO
+// ==========================================
+
 async function getCurrentSession() {
   if (!supabaseClient) {
     throw new Error('No hay conexión con Supabase.');
@@ -283,10 +338,14 @@ async function getCurrentSession() {
     await supabaseClient.auth.getSession();
 
   if (error) throw error;
+
   return data.session;
 }
 
+// ==========================================
 // COMPROBAR ADMINISTRADOR
+// ==========================================
+
 async function checkAdmin() {
   try {
     const session = await getCurrentSession();
@@ -302,13 +361,16 @@ async function checkAdmin() {
     if (error) throw error;
 
     const isAdmin = data === true;
+
     updateAdminButton(isAdmin);
 
     return isAdmin;
 
   } catch (error) {
     console.error('Error comprobando administrador:', error);
+
     updateAdminButton(false);
+
     return false;
   }
 }
@@ -319,13 +381,17 @@ function updateAdminButton(isAdmin) {
   }
 }
 
+// ==========================================
 // BOTÓN ADMINISTRADOR
+// ==========================================
+
 function createAdminButton() {
   const organizer = document.querySelector('#organizerBtn');
 
   if (!organizer || adminButton) return;
 
   adminButton = document.createElement('button');
+
   adminButton.id = 'adminPanelBtn';
   adminButton.className = 'primary';
   adminButton.type = 'button';
@@ -339,7 +405,10 @@ function createAdminButton() {
   adminButton.addEventListener('click', openAdminPanel);
 }
 
+// ==========================================
 // SOLICITUD DE ORGANIZADOR
+// ==========================================
+
 async function requestOrganizer() {
   try {
     const session = await getCurrentSession();
@@ -365,19 +434,26 @@ async function requestOrganizer() {
         rejected: 'Tu solicitud fue rechazada.'
       };
 
-      alert(labels[existing.status] || 'Ya tenés una solicitud registrada.');
+      alert(
+        labels[existing.status] ||
+        'Ya tenés una solicitud registrada.'
+      );
+
       return;
     }
 
     const fullName = prompt('Ingresá tu nombre y apellido:');
+
     if (!fullName || !fullName.trim()) return;
 
     const organization = prompt(
       'Ingresá el nombre de tu agrupación, institución u organización:'
     );
+
     if (!organization || !organization.trim()) return;
 
     const phone = prompt('Ingresá tu número de teléfono:') || '';
+
     const message = prompt(
       'Contanos qué tipo de eventos organizás (opcional):'
     ) || '';
@@ -402,11 +478,17 @@ async function requestOrganizer() {
 
   } catch (error) {
     console.error(error);
-    alert('No se pudo enviar la solicitud: ' + error.message);
+
+    alert(
+      'No se pudo enviar la solicitud: ' + error.message
+    );
   }
 }
 
+// ==========================================
 // CONSULTAR MI SOLICITUD
+// ==========================================
+
 async function checkMyRequest() {
   try {
     const session = await getCurrentSession();
@@ -425,7 +507,10 @@ async function checkMyRequest() {
     if (error) throw error;
 
     if (!data) {
-      alert('Todavía no enviaste una solicitud para ser organizador.');
+      alert(
+        'Todavía no enviaste una solicitud para ser organizador.'
+      );
+
       return;
     }
 
@@ -443,16 +528,21 @@ async function checkMyRequest() {
     );
 
   } catch (error) {
-    alert('Error consultando solicitud: ' + error.message);
+    alert(
+      'Error consultando solicitud: ' + error.message
+    );
   }
-  }
+}
 
 // ==========================================
 // PANEL DE ADMINISTRACIÓN
 // ==========================================
 
 function createAdminDialog() {
-  if (document.querySelector('#adminDialog')) return;
+  if (document.querySelector('#adminDialog')) {
+    adminDialog = document.querySelector('#adminDialog');
+    return;
+  }
 
   adminDialog = document.createElement('dialog');
   adminDialog.id = 'adminDialog';
@@ -501,6 +591,7 @@ async function openAdminPanel() {
 // CARGAR SOLICITUDES
 async function loadAdminRequests() {
   const container = document.querySelector('#adminRequests');
+
   if (!container) return;
 
   container.innerHTML = 'Cargando solicitudes...';
@@ -517,6 +608,7 @@ async function loadAdminRequests() {
       container.innerHTML = `
         <p>No hay solicitudes de organizadores.</p>
       `;
+
       return;
     }
 
@@ -575,20 +667,22 @@ async function loadAdminRequests() {
       `;
     }).join('');
 
-    container.querySelectorAll('[data-action]').forEach(button => {
-      button.addEventListener('click', async () => {
-        const id = button.dataset.id;
-        const action = button.dataset.action;
+    container.querySelectorAll('[data-action]')
+      .forEach(button => {
 
-        if (action === 'approve') {
-          await updateOrganizerRequest(id, 'approved');
-        }
+        button.addEventListener('click', async () => {
+          const id = button.dataset.id;
+          const action = button.dataset.action;
 
-        if (action === 'reject') {
-          await updateOrganizerRequest(id, 'rejected');
-        }
+          if (action === 'approve') {
+            await updateOrganizerRequest(id, 'approved');
+          }
+
+          if (action === 'reject') {
+            await updateOrganizerRequest(id, 'rejected');
+          }
+        });
       });
-    });
 
   } catch (error) {
     console.error('Error cargando solicitudes:', error);
@@ -628,7 +722,10 @@ async function updateOrganizerRequest(id, status) {
 
   } catch (error) {
     console.error(error);
-    alert('No se pudo actualizar la solicitud: ' + error.message);
+
+    alert(
+      'No se pudo actualizar la solicitud: ' + error.message
+    );
   }
 }
 
@@ -654,9 +751,11 @@ async function accountAccess() {
 
       if (action) {
         const { error } = await supabaseClient.auth.signOut();
+
         if (error) throw error;
 
         alert('Sesión cerrada correctamente.');
+
         updateAccountButton();
         updateAdminButton(false);
       }
@@ -714,18 +813,22 @@ async function accountAccess() {
       }
     }
 
-    updateAccountButton();
+    await updateAccountButton();
     await checkAdmin();
 
   } catch (error) {
     console.error('Error de cuenta:', error);
-    alert('No se pudo completar la operación: ' + error.message);
+
+    alert(
+      'No se pudo completar la operación: ' + error.message
+    );
   }
 }
 
 // ACTUALIZAR BOTÓN DE CUENTA
 async function updateAccountButton() {
   const button = document.querySelector('#profileBtn');
+
   if (!button) return;
 
   try {
@@ -733,10 +836,15 @@ async function updateAccountButton() {
 
     button.textContent = session
       ? 'Mi cuenta'
-      : 'Ingresar / Registrarse';
+      : '♙';
+
+    button.setAttribute(
+      'aria-label',
+      session ? 'Mi cuenta' : 'Ingresar o registrarse'
+    );
 
   } catch (error) {
-    button.textContent = 'Ingresar / Registrarse';
+    button.textContent = '♙';
   }
 }
 
@@ -744,152 +852,20 @@ async function updateAccountButton() {
 // NAVEGACIÓN
 // ==========================================
 
-
 function setupNavigation() {
-  document.querySelectorAll('.nav-item[data-page]').forEach(button => {
-    button.addEventListener('click', async () => {
-      page = button.dataset.page;
+  document.querySelectorAll('.nav-item[data-page]')
+    .forEach(button => {
 
-      document.querySelectorAll('.nav-item[data-page]')
-        .forEach(item => item.classList.remove('active'));
+      button.addEventListener('click', async () => {
+        page = button.dataset.page;
 
-      button.classList.add('active');
+        document.querySelectorAll('.nav-item[data-page]')
+          .forEach(item => {
+            item.classList.remove('active', 'selected');
+          });
 
-      if (page === 'map') {
-        info(
-          'Mapa de eventos',
-          'La sección de mapa estará disponible próximamente.'
-        );
-      });
-  }
+        button.classList.add('active');
 
-      if (page === 'account') {
-        await accountAccess();
-      }
-
-      render();
-    });
-  }
-
-// ==========================================
-// CONECTAR BOTONES Y FUNCIONES
-// ==========================================
-
-function setupApp() {
-  eventsEl = document.querySelector('#events');
-  searchInput = document.querySelector('#search');
-
-  if (!eventsEl) {
-    console.error('No se encontró el contenedor #events.');
-    return;
-  }
-
-  // BÚSQUEDA
-  if (searchInput) {
-    searchInput.addEventListener('input', () => {
-      query = searchInput.value.trim().toLowerCase();
-      render();
-    });
-  }
-
-  // FILTROS
-  document.querySelectorAll('.chip[data-filter]').forEach(chip => {
-    chip.addEventListener('click', () => {
-      filter = chip.dataset.filter;
-
-      document.querySelectorAll('.chip[data-filter]')
-        .forEach(item => item.classList.remove('active'));
-
-      chip.classList.add('active');
-      render();
-    });
-  });
-
-  // ABRIR DETALLE
-  eventsEl.addEventListener('click', event => {
-    const card = event.target.closest('.event-card');
-    if (!card) return;
-
-    const selected = allEvents.find(
-      item => String(item.id) === String(card.dataset.id)
-    );
-
-    if (selected) openDetail(selected);
-  });
-
-  eventsEl.addEventListener('keydown', event => {
-    if (event.key !== 'Enter' && event.key !== ' ') return;
-
-    const card = event.target.closest('.event-card');
-    if (!card) return;
-
-    event.preventDefault();
-
-    const selected = allEvents.find(
-      item => String(item.id) === String(card.dataset.id)
-    );
-
-    if (selected) openDetail(selected);
-  });
-
-  // BOTONES DE CIERRE
-  document.querySelectorAll('[data-close]').forEach(button => {
-    button.addEventListener('click', () => {
-      const dialog = button.closest('dialog');
-      if (dialog) dialog.close();
-    });
-  });
-
-  // BOTÓN DE CUENTA
-  document.querySelector('#profileBtn')
-    ?.addEventListener('click', accountAccess);
-
-  // BOTÓN DE ORGANIZADOR
-  document.querySelector('#organizerBtn')
-    ?.addEventListener('click', requestOrganizer);
-
-  // PANEL ADMINISTRADOR
-  createAdminButton();
-  createAdminDialog();
-
-  // NAVEGACIÓN
-  setupNavigation();
-
-  // CAMBIOS DE SESIÓN
-  if (supabaseClient) {
-    supabaseClient.auth.onAuthStateChange(() => {
-      setTimeout(() => {
-        updateAccountButton();
-        checkAdmin();
-      }, 0);
-    });
-  }
-
-  updateAccountButton();
-  checkAdmin();
-
-  // CARGAR EVENTOS
-  loadEvents();
-
-  console.log('Fiestas Gauchas inicializada correctamente.');
-
-const diagnostic = document.getElementById('fg-diagnostic');
-
-if (diagnostic) {
-  diagnostic.textContent =
-    '¡Prueba exitosa! Fiestas Gauchas está funcionando.';
-  diagnostic.style.background = '#d4edda';
-  diagnostic.style.borderColor = '#28a745';
-}
-}
-
-// ==========================================
-// INICIAR APLICACIÓN
-// ==========================================
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', setupApp);
-} else {
-  setupApp();
-}
-
+        if (page === 'map') {
+          info(
+            'Mapa

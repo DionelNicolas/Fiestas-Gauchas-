@@ -867,5 +867,8 @@ function setupNavigation() {
         button.classList.add('active');
 
         if (page === 'map') {
-          info(
-            'Mapa
+  info(
+    'Mapa',
+    'La sección del mapa estará disponible próximamente.'
+  );
+        }

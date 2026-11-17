@@ -744,9 +744,10 @@ async function updateAccountButton() {
 // NAVEGACIÓN
 // ==========================================
 
+
 function setupNavigation() {
   document.querySelectorAll('.nav-item[data-page]').forEach(button => {
-    button.addEventListener('click', () => {
+    button.addEventListener('click', async () => {
       page = button.dataset.page;
 
       document.querySelectorAll('.nav-item[data-page]')
@@ -759,12 +760,16 @@ function setupNavigation() {
           'Mapa de eventos',
           'La sección de mapa estará disponible próximamente.'
         );
+      });
+  }
+
+      if (page === 'account') {
+        await accountAccess();
       }
 
       render();
     });
-  });
-}
+  }
 
 // ==========================================
 // CONECTAR BOTONES Y FUNCIONES

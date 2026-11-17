@@ -44,3 +44,37 @@ document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click',()=
 }));
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 render();
+
+async function accountAccess() {
+  const email = prompt('Ingresá tu correo electrónico:');
+  if (!email) return;
+
+  const password = prompt('Ingresá tu contraseña (mínimo 6 caracteres):');
+  if (!password) return;
+
+  if (password.length < 6) {
+    alert('La contraseña debe tener al menos 6 caracteres.');
+    return;
+  }
+
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password
+  });
+
+  if (error) {
+    alert('Error: ' + error.message);
+    return;
+  }
+
+  if (data.user) {
+    alert('¡Registro realizado! Revisá tu correo para confirmar la cuenta.');
+  }
+}
+
+document.querySelectorAll('.nav-item').forEach(b => {
+  if (b.dataset.page === 'account') {
+    b.onclick = () => accountAccess();
+  }
+});
+

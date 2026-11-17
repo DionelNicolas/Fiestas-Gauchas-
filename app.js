@@ -446,3 +446,436 @@ async function checkMyRequest() {
     alert('Error consultando solicitud: ' + error.message);
   }
   }
+
+// ==========================================
+// PANEL DE ADMINISTRACIÓN
+// ==========================================
+
+function createAdminDialog() {
+  if (document.querySelector('#adminDialog')) return;
+
+  adminDialog = document.createElement('dialog');
+  adminDialog.id = 'adminDialog';
+
+  adminDialog.innerHTML = `
+    <div style="padding:20px;max-height:80vh;overflow:auto;">
+      <h2>🛡️ Panel administrador</h2>
+      <p>Solicitudes de organizadores</p>
+
+      <div id="adminRequests">
+        Cargando solicitudes...
+      </div>
+
+      <button id="closeAdminDialog"
+        class="primary full"
+        style="margin-top:15px;">
+        Cerrar
+      </button>
+    </div>
+  `;
+
+  document.body.appendChild(adminDialog);
+
+  adminDialog.querySelector('#closeAdminDialog')
+    .addEventListener('click', () => adminDialog.close());
+}
+
+// ABRIR PANEL
+async function openAdminPanel() {
+  const isAdmin = await checkAdmin();
+
+  if (!isAdmin) {
+    alert('No tenés permisos de administrador.');
+    return;
+  }
+
+  createAdminDialog();
+
+  if (!adminDialog.open) {
+    adminDialog.showModal();
+  }
+
+  loadAdminRequests();
+}
+
+// CARGAR SOLICITUDES
+async function loadAdminRequests() {
+  const container = document.querySelector('#adminRequests');
+  if (!container) return;
+
+  container.innerHTML = 'Cargando solicitudes...';
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('organizer_requests')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      container.innerHTML = `
+        <p>No hay solicitudes de organizadores.</p>
+      `;
+      return;
+    }
+
+    container.innerHTML = data.map(request => {
+      const statusLabels = {
+        pending: 'Pendiente',
+        approved: 'Aprobada',
+        rejected: 'Rechazada'
+      };
+
+      return `
+        <div style="
+          border:1px solid #ccc;
+          border-radius:10px;
+          padding:12px;
+          margin:12px 0;
+        ">
+          <h3>${escapeHTML(request.full_name)}</h3>
+
+          <p>
+            <strong>Organización:</strong>
+            ${escapeHTML(request.organization_name)}
+          </p>
+
+          <p>
+            <strong>Teléfono:</strong>
+            ${escapeHTML(request.phone || 'No informado')}
+          </p>
+
+          <p>
+            <strong>Mensaje:</strong>
+            ${escapeHTML(request.message || 'Sin mensaje')}
+          </p>
+
+          <p>
+            <strong>Estado:</strong>
+            ${statusLabels[request.status] || escapeHTML(request.status)}
+          </p>
+
+          ${request.status === 'pending' ? `
+            <button
+              class="primary"
+              data-action="approve"
+              data-id="${escapeHTML(request.id)}">
+              Aprobar
+            </button>
+
+            <button
+              class="secondary"
+              data-action="reject"
+              data-id="${escapeHTML(request.id)}">
+              Rechazar
+            </button>
+          ` : ''}
+        </div>
+      `;
+    }).join('');
+
+    container.querySelectorAll('[data-action]').forEach(button => {
+      button.addEventListener('click', async () => {
+        const id = button.dataset.id;
+        const action = button.dataset.action;
+
+        if (action === 'approve') {
+          await updateOrganizerRequest(id, 'approved');
+        }
+
+        if (action === 'reject') {
+          await updateOrganizerRequest(id, 'rejected');
+        }
+      });
+    });
+
+  } catch (error) {
+    console.error('Error cargando solicitudes:', error);
+
+    container.innerHTML = `
+      <p>No se pudieron cargar las solicitudes.</p>
+      <p>${escapeHTML(error.message)}</p>
+    `;
+  }
+}
+
+// APROBAR O RECHAZAR
+async function updateOrganizerRequest(id, status) {
+  const actionText = status === 'approved'
+    ? 'aprobar'
+    : 'rechazar';
+
+  if (!confirm(`¿Estás seguro de ${actionText} esta solicitud?`)) {
+    return;
+  }
+
+  try {
+    const { error } = await supabaseClient
+      .from('organizer_requests')
+      .update({ status })
+      .eq('id', id);
+
+    if (error) throw error;
+
+    alert(
+      status === 'approved'
+        ? 'Organizador aprobado correctamente.'
+        : 'Solicitud rechazada.'
+    );
+
+    await loadAdminRequests();
+
+  } catch (error) {
+    console.error(error);
+    alert('No se pudo actualizar la solicitud: ' + error.message);
+  }
+}
+
+// ==========================================
+// REGISTRO E INICIO DE SESIÓN
+// ==========================================
+
+async function accountAccess() {
+  if (!supabaseClient) {
+    alert('No hay conexión con Supabase.');
+    return;
+  }
+
+  try {
+    const session = await getCurrentSession();
+
+    if (session) {
+      const action = confirm(
+        'Ya tenés una sesión iniciada.\n\n' +
+        'Correo: ' + session.user.email + '\n\n' +
+        '¿Querés cerrar sesión?'
+      );
+
+      if (action) {
+        const { error } = await supabaseClient.auth.signOut();
+        if (error) throw error;
+
+        alert('Sesión cerrada correctamente.');
+        updateAccountButton();
+        updateAdminButton(false);
+      }
+
+      return;
+    }
+
+    const choice = prompt(
+      'CUENTA - FIESTAS GAUCHAS\n\n' +
+      'Escribí 1 para iniciar sesión.\n' +
+      'Escribí 2 para crear una cuenta.'
+    );
+
+    if (choice !== '1' && choice !== '2') return;
+
+    const email = prompt('Ingresá tu correo electrónico:');
+
+    if (!email || !email.includes('@')) {
+      alert('Ingresá un correo electrónico válido.');
+      return;
+    }
+
+    const password = prompt('Ingresá tu contraseña:');
+
+    if (!password || password.length < 6) {
+      alert('La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+
+    if (choice === '1') {
+      const { error } = await supabaseClient.auth.signInWithPassword({
+        email: email.trim(),
+        password
+      });
+
+      if (error) throw error;
+
+      alert('¡Iniciaste sesión correctamente!');
+
+    } else {
+      const { data, error } = await supabaseClient.auth.signUp({
+        email: email.trim(),
+        password
+      });
+
+      if (error) throw error;
+
+      if (data.session) {
+        alert('¡Cuenta creada correctamente!');
+      } else {
+        alert(
+          'Cuenta creada. Revisá tu correo electrónico ' +
+          'para confirmar el registro.'
+        );
+      }
+    }
+
+    updateAccountButton();
+    await checkAdmin();
+
+  } catch (error) {
+    console.error('Error de cuenta:', error);
+    alert('No se pudo completar la operación: ' + error.message);
+  }
+}
+
+// ACTUALIZAR BOTÓN DE CUENTA
+async function updateAccountButton() {
+  const button = document.querySelector('#profileBtn');
+  if (!button) return;
+
+  try {
+    const session = await getCurrentSession();
+
+    button.textContent = session
+      ? 'Mi cuenta'
+      : 'Ingresar / Registrarse';
+
+  } catch (error) {
+    button.textContent = 'Ingresar / Registrarse';
+  }
+}
+
+// ==========================================
+// NAVEGACIÓN
+// ==========================================
+
+function setupNavigation() {
+  document.querySelectorAll('.nav-item[data-page]').forEach(button => {
+    button.addEventListener('click', () => {
+      page = button.dataset.page;
+
+      document.querySelectorAll('.nav-item[data-page]')
+        .forEach(item => item.classList.remove('active'));
+
+      button.classList.add('active');
+
+      if (page === 'map') {
+        info(
+          'Mapa de eventos',
+          'La sección de mapa estará disponible próximamente.'
+        );
+      }
+
+      render();
+    });
+  });
+}
+
+// ==========================================
+// CONECTAR BOTONES Y FUNCIONES
+// ==========================================
+
+function setupApp() {
+  eventsEl = document.querySelector('#events');
+  searchInput = document.querySelector('#search');
+
+  if (!eventsEl) {
+    console.error('No se encontró el contenedor #events.');
+    return;
+  }
+
+  // BÚSQUEDA
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      query = searchInput.value.trim().toLowerCase();
+      render();
+    });
+  }
+
+  // FILTROS
+  document.querySelectorAll('.chip[data-filter]').forEach(chip => {
+    chip.addEventListener('click', () => {
+      filter = chip.dataset.filter;
+
+      document.querySelectorAll('.chip[data-filter]')
+        .forEach(item => item.classList.remove('active'));
+
+      chip.classList.add('active');
+      render();
+    });
+  });
+
+  // ABRIR DETALLE
+  eventsEl.addEventListener('click', event => {
+    const card = event.target.closest('.event-card');
+    if (!card) return;
+
+    const selected = allEvents.find(
+      item => String(item.id) === String(card.dataset.id)
+    );
+
+    if (selected) openDetail(selected);
+  });
+
+  eventsEl.addEventListener('keydown', event => {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+
+    const card = event.target.closest('.event-card');
+    if (!card) return;
+
+    event.preventDefault();
+
+    const selected = allEvents.find(
+      item => String(item.id) === String(card.dataset.id)
+    );
+
+    if (selected) openDetail(selected);
+  });
+
+  // BOTONES DE CIERRE
+  document.querySelectorAll('[data-close]').forEach(button => {
+    button.addEventListener('click', () => {
+      const dialog = button.closest('dialog');
+      if (dialog) dialog.close();
+    });
+  });
+
+  // BOTÓN DE CUENTA
+  document.querySelector('#profileBtn')
+    ?.addEventListener('click', accountAccess);
+
+  // BOTÓN DE ORGANIZADOR
+  document.querySelector('#organizerBtn')
+    ?.addEventListener('click', requestOrganizer);
+
+  // PANEL ADMINISTRADOR
+  createAdminButton();
+  createAdminDialog();
+
+  // NAVEGACIÓN
+  setupNavigation();
+
+  // CAMBIOS DE SESIÓN
+  if (supabaseClient) {
+    supabaseClient.auth.onAuthStateChange(() => {
+      setTimeout(() => {
+        updateAccountButton();
+        checkAdmin();
+      }, 0);
+    });
+  }
+
+  updateAccountButton();
+  checkAdmin();
+
+  // CARGAR EVENTOS
+  loadEvents();
+
+  console.log('Fiestas Gauchas inicializada correctamente.');
+}
+
+// ==========================================
+// INICIAR APLICACIÓN
+// ==========================================
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', setupApp);
+} else {
+  setupApp();
+}
+

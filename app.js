@@ -37,9 +37,10 @@ let page = 'home';
 
 let eventsEl;
 let searchInput;
-
-// IMPORTANTE: no cargar eventos de demostración.
 let allEvents = [];
+
+let adminDialog = null;
+let adminButton = null;
 
 // ==========================================
 // SEGURIDAD HTML
@@ -87,7 +88,7 @@ function formatDate(date) {
 }
 
 // ==========================================
-// CARGAR EVENTOS DESDE SUPABASE
+// CARGAR EVENTOS
 // ==========================================
 
 async function loadEvents() {
@@ -98,9 +99,7 @@ async function loadEvents() {
     return;
   }
 
-  eventsEl.innerHTML = `
-    <div class="empty">Cargando eventos...</div>
-  `;
+  eventsEl.innerHTML = '<div class="empty">Cargando eventos...</div>';
 
   try {
     const { data, error } = await supabaseClient
@@ -111,7 +110,6 @@ async function loadEvents() {
 
     if (error) throw error;
 
-    // Nunca utilizar eventos de demostración.
     allEvents = (data || []).map(event => ({
       id: event.id,
       title: event.title || 'Evento sin título',
@@ -128,37 +126,28 @@ async function loadEvents() {
       isDemo: false
     }));
 
-    console.log('Eventos publicados cargados:', allEvents.length);
-
+    console.log('Eventos publicados:', allEvents.length);
     render();
 
   } catch (error) {
     console.error('Error al cargar eventos:', error);
-
     allEvents = [];
     render();
 
     showLoadError(
-      'No se pudieron cargar los eventos. Revisá la conexión y los permisos de Supabase. Detalle: ' +
-      error.message
+      'No se pudieron cargar los eventos. Detalle: ' + error.message
     );
   }
 }
 
 function showLoadError(message) {
-  console.error(message);
-
   const count = document.querySelector('#count');
 
-  if (count) {
-    count.textContent = 'Error al cargar';
-  }
+  if (count) count.textContent = 'Error al cargar';
 
   if (eventsEl) {
     eventsEl.innerHTML = `
-      <div class="empty">
-        ${escapeHTML(message)}
-      </div>
+      <div class="empty">${escapeHTML(message)}</div>
     `;
   }
 }
@@ -201,9 +190,7 @@ function render() {
       ${event.description}
     `.toLowerCase();
 
-    const matchesSearch = searchable.includes(query);
-
-    return matchesFilter && matchesSearch;
+    return matchesFilter && searchable.includes(query);
   });
 
   if (page === 'saved') {
@@ -216,9 +203,7 @@ function render() {
 
   const count = document.querySelector('#count');
 
-  if (count) {
-    count.textContent = `${list.length} eventos`;
-  }
+  if (count) count.textContent = `${list.length} eventos`;
 
   if (list.length === 0) {
     eventsEl.innerHTML = `
@@ -233,29 +218,17 @@ function render() {
 
   eventsEl.innerHTML = list.map(event => `
     <article class="event-card" data-id="${escapeHTML(event.id)}">
-
       <div class="event-art">${event.icon}</div>
 
       <div class="event-info">
         <div class="tag">${escapeHTML(event.type)}</div>
-
         <h3>${escapeHTML(event.title)}</h3>
-
-        <p class="meta">
-          📍 ${escapeHTML(event.place)}
-        </p>
-
-        <p class="meta">
-          📅 ${escapeHTML(event.date)}
-        </p>
-
-        <div class="price">
-          ${escapeHTML(event.price)}
-        </div>
+        <p class="meta">📍 ${escapeHTML(event.place)}</p>
+        <p class="meta">📅 ${escapeHTML(event.date)}</p>
+        <div class="price">${escapeHTML(event.price)}</div>
       </div>
 
       <div class="arrow">›</div>
-
     </article>
   `).join('');
 }
@@ -276,63 +249,43 @@ function openDetail(event) {
 
   detail.innerHTML = `
     <div class="detail-art">${event.icon}</div>
-
     <div class="tag">${escapeHTML(event.type)}</div>
 
-    <h2 class="detail-title">
-      ${escapeHTML(event.title)}
-    </h2>
+    <h2 class="detail-title">${escapeHTML(event.title)}</h2>
 
-    <p class="meta">
-      📍 ${escapeHTML(event.place)}
-    </p>
+    <p class="meta">📍 ${escapeHTML(event.place)}</p>
 
     ${event.venue ? `
-      <p class="meta">
-        📌 ${escapeHTML(event.venue)}
-      </p>
+      <p class="meta">📌 ${escapeHTML(event.venue)}</p>
     ` : ''}
 
-    <p class="meta">
-      📅 ${escapeHTML(event.date)}
-    </p>
+    <p class="meta">📅 ${escapeHTML(event.date)}</p>
+    <p class="price">${escapeHTML(event.price)}</p>
 
-    <p class="price">
-      ${escapeHTML(event.price)}
-    </p>
-
-    <p class="detail-copy">
-      ${escapeHTML(event.description)}
-    </p>
+    <p class="detail-copy">${escapeHTML(event.description)}</p>
 
     <button class="primary full" id="saveBtn">
       ${isSaved ? '♥ Quitar de guardados' : '♡ Guardar evento'}
     </button>
   `;
 
-  const saveButton = document.querySelector('#saveBtn');
+  document.querySelector('#saveBtn')?.addEventListener('click', () => {
+    let favorites = getSaved();
 
-  if (saveButton) {
-    saveButton.addEventListener('click', () => {
-      let favorites = getSaved();
+    if (favorites.some(id => String(id) === String(event.id))) {
+      favorites = favorites.filter(
+        id => String(id) !== String(event.id)
+      );
+    } else {
+      favorites.push(event.id);
+    }
 
-      if (favorites.some(id => String(id) === String(event.id))) {
-        favorites = favorites.filter(
-          id => String(id) !== String(event.id)
-        );
-      } else {
-        favorites.push(event.id);
-      }
+    saveFavorites(favorites);
+    openDetail(event);
+    render();
+  });
 
-      saveFavorites(favorites);
-      openDetail(event);
-      render();
-    });
-  }
-
-  if (!dialog.open) {
-    dialog.showModal();
-  }
+  if (!dialog.open) dialog.showModal();
 }
 
 // ==========================================
@@ -352,9 +305,7 @@ function info(title, message) {
   titleEl.textContent = title;
   textEl.textContent = message;
 
-  if (!dialog.open) {
-    dialog.showModal();
-  }
+  if (!dialog.open) dialog.showModal();
 }
 
 // ==========================================
@@ -379,15 +330,12 @@ function setupSearch() {
 function setupFilters() {
   document.querySelectorAll('.chip').forEach(button => {
     button.addEventListener('click', () => {
-
       document.querySelectorAll('.chip').forEach(item => {
         item.classList.remove('active');
       });
 
       button.classList.add('active');
-
       filter = button.dataset.filter || 'Todos';
-
       render();
     });
   });
@@ -400,11 +348,407 @@ function setupFilters() {
 function setupDialogs() {
   document.querySelectorAll('[data-close]').forEach(button => {
     button.addEventListener('click', () => {
-      const dialog = button.closest('dialog');
-
-      if (dialog) dialog.close();
+      button.closest('dialog')?.close();
     });
   });
+}
+
+// ==========================================
+// SESION DE USUARIO
+// ==========================================
+
+async function getCurrentSession() {
+  if (!supabaseClient) {
+    throw new Error('No hay conexión con Supabase.');
+  }
+
+  const { data, error } = await supabaseClient.auth.getSession();
+
+  if (error) throw error;
+
+  return data.session;
+}
+
+// ==========================================
+// COMPROBAR ADMINISTRADOR
+// ==========================================
+
+async function checkAdmin() {
+  try {
+    const session = await getCurrentSession();
+
+    if (!session) {
+      updateAdminButton(false);
+      return false;
+    }
+
+    const { data, error } = await supabaseClient.rpc('is_app_admin');
+
+    if (error) throw error;
+
+    updateAdminButton(data === true);
+
+    return data === true;
+
+  } catch (error) {
+    console.error('No se pudo comprobar administrador:', error);
+    updateAdminButton(false);
+    return false;
+  }
+}
+
+function updateAdminButton(isAdmin) {
+  if (!adminButton) return;
+
+  adminButton.style.display = isAdmin ? 'inline-block' : 'none';
+}
+
+// ==========================================
+// BOTON DE ADMINISTRACION
+// ==========================================
+
+function createAdminButton() {
+  const organizer = document.querySelector('#organizerBtn');
+
+  if (!organizer || adminButton) return;
+
+  adminButton = document.createElement('button');
+  adminButton.id = 'adminPanelBtn';
+  adminButton.className = 'primary';
+  adminButton.textContent = '🛡️ Panel administrador';
+  adminButton.style.display = 'none';
+  adminButton.style.margin = '10px 0';
+  adminButton.style.padding = '12px';
+  adminButton.style.width = '100%';
+
+  organizer.insertAdjacentElement('afterend', adminButton);
+
+  adminButton.addEventListener('click', openAdminPanel);
+}
+
+// ==========================================
+// FORMULARIO DE SOLICITUD
+// ==========================================
+
+async function requestOrganizer() {
+  try {
+    const session = await getCurrentSession();
+
+    if (!session) {
+      alert('Primero tenés que iniciar sesión.');
+      return;
+    }
+
+    const { data: existing, error: searchError } =
+      await supabaseClient
+        .from('organizer_requests')
+        .select('id, status')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
+
+    if (searchError) throw searchError;
+
+    if (existing) {
+      const statuses = {
+        pending: 'Tu solicitud está pendiente de aprobación.',
+        approved: 'Tu solicitud fue aprobada. Ya sos organizador.',
+        rejected: 'Tu solicitud fue rechazada.'
+      };
+
+      alert(statuses[existing.status] || 'Ya tenés una solicitud registrada.');
+      return;
+    }
+
+    const fullName = prompt('Ingresá tu nombre y apellido:');
+
+    if (!fullName || !fullName.trim()) return;
+
+    const organization = prompt(
+      'Ingresá el nombre de tu agrupación, institución u organización:'
+    );
+
+    if (!organization || !organization.trim()) return;
+
+    const phone = prompt('Ingresá tu número de teléfono:') || '';
+
+    const message = prompt(
+      'Contanos qué tipo de eventos organizás (opcional):'
+    ) || '';
+
+    const { error } = await supabaseClient
+      .from('organizer_requests')
+      .insert({
+        user_id: session.user.id,
+        full_name: fullName.trim(),
+        organization_name: organization.trim(),
+        phone: phone.trim(),
+        message: message.trim(),
+        status: 'pending'
+      });
+
+    if (error) throw error;
+
+    alert(
+      '¡Solicitud enviada correctamente!\n\n' +
+      'El administrador revisará tus datos y podrás consultar el resultado desde tu cuenta.'
+    );
+
+  } catch (error) {
+    alert('No se pudo enviar la solicitud: ' + error.message);
+    console.error(error);
+  }
+}
+
+// ==========================================
+// CONSULTAR MI SOLICITUD
+// ==========================================
+
+async function checkMyRequest() {
+  try {
+    const session = await getCurrentSession();
+
+    if (!session) {
+      alert('Primero tenés que iniciar sesión.');
+      return;
+    }
+
+    const { data, error } = await supabaseClient
+      .from('organizer_requests')
+      .select('full_name, organization_name, status, created_at')
+      .eq('user_id', session.user.id)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    if (!data) {
+      alert('Todavía no enviaste una solicitud para ser organizador.');
+      return;
+    }
+
+    const statuses = {
+      pending: 'PENDIENTE DE APROBACIÓN',
+      approved: 'APROBADA',
+      rejected: 'RECHAZADA'
+    };
+
+    alert(
+      'ESTADO DE TU SOLICITUD\n\n' +
+      'Nombre: ' + data.full_name + '\n' +
+      'Organización: ' + data.organization_name + '\n' +
+      'Estado: ' + (statuses[data.status] || data.status)
+    );
+
+  } catch (error) {
+    alert('Error consultando solicitud: ' + error.message);
+  }
+}
+
+// ==========================================
+// PANEL DE ADMINISTRACION
+// ==========================================
+
+function createAdminDialog() {
+  if (adminDialog) return;
+
+  adminDialog = document.createElement('dialog');
+  adminDialog.id = 'adminDialog';
+
+  adminDialog.style.width = '92%';
+  adminDialog.style.maxWidth = '650px';
+  adminDialog.style.maxHeight = '85vh';
+  adminDialog.style.overflowY = 'auto';
+  adminDialog.style.borderRadius = '14px';
+  adminDialog.style.border = '1px solid #999';
+  adminDialog.style.padding = '20px';
+
+  adminDialog.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+      <h2>🛡️ Administración</h2>
+      <button type="button" id="closeAdminDialog">✕</button>
+    </div>
+
+    <p>Solicitudes de organizadores</p>
+
+    <div id="adminRequests">
+      Cargando solicitudes...
+    </div>
+  `;
+
+  document.body.appendChild(adminDialog);
+
+  document.querySelector('#closeAdminDialog').addEventListener(
+    'click',
+    () => adminDialog.close()
+  );
+
+  adminDialog.addEventListener('click', async event => {
+    const button = event.target.closest('[data-request-action]');
+
+    if (!button) return;
+
+    const action = button.dataset.requestAction;
+    const requestId = button.dataset.requestId;
+
+    if (!requestId || !['approved', 'rejected'].includes(action)) return;
+
+    const confirmed = confirm(
+      action === 'approved'
+        ? '¿Querés aprobar a este organizador?'
+        : '¿Querés rechazar esta solicitud?'
+    );
+
+    if (!confirmed) return;
+
+    await updateOrganizerRequest(requestId, action);
+  });
+}
+
+// ==========================================
+// CARGAR SOLICITUDES EN EL PANEL
+// ==========================================
+
+async function loadAdminRequests() {
+  const container = document.querySelector('#adminRequests');
+
+  if (!container) return;
+
+  container.innerHTML = 'Cargando solicitudes...';
+
+  try {
+    const isAdmin = await checkAdmin();
+
+    if (!isAdmin) {
+      container.textContent = 'No tenés permisos para acceder.';
+      return;
+    }
+
+    const { data, error } = await supabaseClient
+      .from('organizer_requests')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      container.innerHTML = '<p>No hay solicitudes registradas.</p>';
+      return;
+    }
+
+    container.innerHTML = data.map(request => {
+      const statusLabels = {
+        pending: '⏳ Pendiente',
+        approved: '✅ Aprobada',
+        rejected: '❌ Rechazada'
+      };
+
+      return `
+        <div style="
+          border:1px solid #aaa;
+          border-radius:10px;
+          padding:14px;
+          margin:12px 0;
+        ">
+          <h3>${escapeHTML(request.full_name)}</h3>
+
+          <p><strong>Organización:</strong>
+          ${escapeHTML(request.organization_name)}</p>
+
+          <p><strong>Teléfono:</strong>
+          ${escapeHTML(request.phone || 'No informado')}</p>
+
+          <p><strong>Mensaje:</strong>
+          ${escapeHTML(request.message || 'Sin mensaje')}</p>
+
+          <p><strong>Estado:</strong>
+          ${statusLabels[request.status] || escapeHTML(request.status)}</p>
+
+          ${request.status === 'pending' ? `
+            <button
+              type="button"
+              data-request-action="approved"
+              data-request-id="${escapeHTML(request.id)}"
+            >
+              ✅ Aprobar
+            </button>
+
+            <button
+              type="button"
+              data-request-action="rejected"
+              data-request-id="${escapeHTML(request.id)}"
+            >
+              ❌ Rechazar
+            </button>
+          ` : ''}
+        </div>
+      `;
+    }).join('');
+
+  } catch (error) {
+    console.error('Error cargando solicitudes:', error);
+
+    container.innerHTML = `
+      <p>No se pudieron cargar las solicitudes.</p>
+      <p>${escapeHTML(error.message)}</p>
+    `;
+  }
+}
+
+// ==========================================
+// APROBAR O RECHAZAR ORGANIZADOR
+// ==========================================
+
+async function updateOrganizerRequest(requestId, newStatus) {
+  try {
+    const isAdmin = await checkAdmin();
+
+    if (!isAdmin) {
+      alert('No tenés permisos de administrador.');
+      return;
+    }
+
+    const { error } = await supabaseClient
+      .from('organizer_requests')
+      .update({ status: newStatus })
+      .eq('id', requestId);
+
+    if (error) throw error;
+
+    alert(
+      newStatus === 'approved'
+        ? '¡Organizador aprobado correctamente!'
+        : 'Solicitud rechazada correctamente.'
+    );
+
+    await loadAdminRequests();
+
+  } catch (error) {
+    alert('No se pudo actualizar la solicitud: ' + error.message);
+    console.error(error);
+  }
+}
+
+// ==========================================
+// ABRIR PANEL ADMINISTRADOR
+// ==========================================
+
+async function openAdminPanel() {
+  try {
+    const isAdmin = await checkAdmin();
+
+    if (!isAdmin) {
+      alert('Acceso exclusivo para el administrador.');
+      return;
+    }
+
+    createAdminDialog();
+
+    adminDialog.showModal();
+
+    await loadAdminRequests();
+
+  } catch (error) {
+    alert('Error al abrir el panel: ' + error.message);
+  }
 }
 
 // ==========================================
@@ -418,29 +762,35 @@ async function accountAccess() {
   }
 
   try {
-    const { data, error } =
-      await supabaseClient.auth.getSession();
-
-    if (error) throw error;
-
-    const session = data.session;
+    const session = await getCurrentSession();
 
     if (session) {
       const option = prompt(
         'Tu cuenta está iniciada: ' + session.user.email +
         '\n\n1. Ver mi cuenta' +
-        '\n2. Cerrar sesión'
+        '\n2. Consultar solicitud de organizador' +
+        '\n3. Cerrar sesión'
       );
 
       if (option === '1') {
-        alert('Cuenta activa: ' + session.user.email);
+        const isAdmin = await checkAdmin();
+
+        alert(
+          'Cuenta activa: ' + session.user.email +
+          (isAdmin ? '\n\nCuenta de administrador.' : '')
+        );
       }
 
       if (option === '2') {
+        await checkMyRequest();
+      }
+
+      if (option === '3') {
         const result = await supabaseClient.auth.signOut();
 
         if (result.error) throw result.error;
 
+        updateAdminButton(false);
         alert('Sesión cerrada correctamente.');
       }
 
@@ -458,187 +808,4 @@ async function accountAccess() {
     const email = prompt('Ingresá tu correo electrónico:');
 
     if (!email || !email.includes('@')) {
-      alert('Ingresá un correo válido.');
-      return;
-    }
-
-    const password = prompt('Ingresá tu contraseña:');
-
-    if (!password) return;
-
-    if (option === '1') {
-      if (password.length < 6) {
-        alert('La contraseña debe tener al menos 6 caracteres.');
-        return;
-      }
-
-      const result = await supabaseClient.auth.signUp({
-        email: email.trim(),
-        password
-      });
-
-      if (result.error) throw result.error;
-
-      alert(
-        result.data.session
-          ? '¡Tu cuenta fue creada correctamente!'
-          : 'Registro realizado. Revisá tu correo para confirmar la cuenta.'
-      );
-    }
-
-    if (option === '2') {
-      const result =
-        await supabaseClient.auth.signInWithPassword({
-          email: email.trim(),
-          password
-        });
-
-      if (result.error) throw result.error;
-
-      alert('¡Bienvenido a Fiestas gauchas!');
-    }
-
-  } catch (error) {
-    alert('No se pudo completar la operación: ' + error.message);
-  }
-}
-
-// ==========================================
-// NAVEGACION
-// ==========================================
-
-function setupNavigation() {
-  document.querySelectorAll('.nav-item').forEach(button => {
-    button.addEventListener('click', () => {
-
-      page = button.dataset.page || 'home';
-
-      document.querySelectorAll('.nav-item').forEach(item => {
-        item.classList.toggle('selected', item === button);
-      });
-
-      if (page === 'home' || page === 'saved') {
-        render();
-      }
-
-      if (page === 'account') {
-        accountAccess();
-      }
-
-      if (page === 'map') {
-        info(
-          'Mapa de eventos',
-          'El mapa interactivo se incorporará en una próxima versión.'
-        );
-      }
-    });
-  });
-}
-
-// ==========================================
-// ORGANIZADORES
-// ==========================================
-
-function setupOrganizer() {
-  const button = document.querySelector('#organizerBtn');
-
-  if (!button) return;
-
-  button.addEventListener('click', async () => {
-
-    if (!supabaseClient) {
-      alert('No se pudo conectar con Supabase.');
-      return;
-    }
-
-    try {
-      const { data, error } =
-        await supabaseClient.auth.getSession();
-
-      if (error) throw error;
-
-      if (!data.session) {
-        alert('Primero tenés que iniciar sesión.');
-        return;
-      }
-
-      info(
-        'Publicar un evento',
-        'Para publicar necesitás solicitar una cuenta de organizador y esperar la aprobación del administrador.'
-      );
-
-    } catch (error) {
-      alert('Error: ' + error.message);
-    }
-  });
-}
-
-// ==========================================
-// PERFIL
-// ==========================================
-
-function setupProfile() {
-  const button = document.querySelector('#profileBtn');
-
-  if (!button) return;
-
-  button.addEventListener('click', accountAccess);
-}
-
-// ==========================================
-// INICIO DE LA APLICACION
-// ==========================================
-
-function startApp() {
-  try {
-    eventsEl = document.querySelector('#events');
-
-    if (!eventsEl) {
-      console.error('No se encontró el contenedor #events.');
-      return;
-    }
-
-    setupSearch();
-    setupFilters();
-    setupDialogs();
-    setupNavigation();
-    setupOrganizer();
-    setupProfile();
-
-    eventsEl.addEventListener('click', event => {
-
-      const card = event.target.closest('[data-id]');
-
-      if (!card) return;
-
-      const selectedEvent = allEvents.find(
-        item => String(item.id) === card.dataset.id
-      );
-
-      if (selectedEvent) {
-        openDetail(selectedEvent);
-      }
-    });
-
-    if (supabaseClient) {
-      supabaseClient.auth.onAuthStateChange((event, session) => {
-        console.log('Estado de cuenta:', event);
-      });
-    }
-
-    loadEvents();
-
-    console.log('Fiestas gauchas inició correctamente.');
-
-  } catch (error) {
-    console.error('Error al iniciar la aplicación:', error);
-
-    alert('Error al iniciar Fiestas gauchas: ' + error.message);
-  }
-}
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', startApp);
-} else {
-  startApp();
-}
+  

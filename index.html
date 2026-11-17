@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="es">
 <head>
@@ -5,22 +6,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#234b36">
   <meta name="description" content="Encontrá domas, jineteadas, bailes y fiestas populares en toda Argentina.">
+
   <title>Fiestas gauchas 🇦🇷</title>
+
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
+
 <header class="topbar">
-  <div class="brand"><span class="flag">🇦🇷</span><span>Fiestas gauchas</span></div>
+  <div class="brand">
+    <span class="flag">🇦🇷</span>
+    <span>Fiestas gauchas</span>
+  </div>
   <button class="icon-btn" id="profileBtn" aria-label="Perfil">♙</button>
 </header>
+
 <main>
+
   <section class="hero">
     <p class="eyebrow">TRADICIÓN ARGENTINA</p>
     <h1>La tradición se vive en cada encuentro.</h1>
     <p class="sub">Encontrá domas, bailes y fiestas populares en toda Argentina.</p>
-    <label class="search"><span>⌕</span><input id="search" type="search" placeholder="Buscar evento o localidad..." autocomplete="off"></label>
+
+    <label class="search">
+      <span>⌕</span>
+      <input id="search" type="search" placeholder="Buscar evento o localidad..." autocomplete="off">
+    </label>
   </section>
 
   <nav class="chips" aria-label="Filtrar eventos">
@@ -31,35 +45,58 @@
   </nav>
 
   <section class="section-head">
-    <div><p class="eyebrow">AGENDA POPULAR</p><h2>Eventos para descubrir</h2></div>
+    <div>
+      <p class="eyebrow">AGENDA POPULAR</p>
+      <h2>Eventos para descubrir</h2>
+    </div>
     <span id="count" class="count"></span>
   </section>
+
   <section id="events" class="events" aria-live="polite"></section>
 
   <section class="organizer">
-    <div><p class="eyebrow">¿ORGANIZÁS UN EVENTO?</p><h2>Compartilo con todo el país.</h2>
-    <p>Solicitá tu cuenta de organizador y publicá tus eventos una vez aprobada.</p>
-    <button id="organizerBtn" class="primary">Quiero publicar</button>
+    <div>
+      <p class="eyebrow">¿ORGANIZÁS UN EVENTO?</p>
+      <h2>Compartilo con todo el país.</h2>
+      <p>Solicitá tu cuenta de organizador y publicá tus eventos una vez aprobada.</p>
+      <button id="organizerBtn" class="primary">Quiero publicar</button>
+    </div>
   </section>
-  <p class="disclaimer">Los eventos que aparecen son ejemplos de demostración. Confirmá siempre fecha, lugar y entradas con el organizador.</p>
+
+  <p class="disclaimer">
+    Confirmá siempre fecha, lugar y entradas con el organizador.
+  </p>
+
 </main>
 
 <nav class="bottom-nav">
-  <button class="nav-item selected" data-page="home"><span>⌂</span>Inicio</button>
-  <button class="nav-item" data-page="map"><span>⌖</span>Mapa</button>
-  <button class="nav-item" data-page="saved"><span>♡</span>Guardados</button>
-  <button class="nav-item" data-page="account"><span>♙</span>Cuenta</button>
+  <button class="nav-item selected" data-page="home">
+    <span>⌂</span>Inicio
+  </button>
+  <button class="nav-item" data-page="map">
+    <span>⌖</span>Mapa
+  </button>
+  <button class="nav-item" data-page="saved">
+    <span>♡</span>Guardados
+  </button>
+  <button class="nav-item" data-page="account">
+    <span>♙</span>Cuenta
+  </button>
 </nav>
 
 <dialog id="detailDialog">
   <button class="close" data-close aria-label="Cerrar">×</button>
   <div id="detailContent"></div>
 </dialog>
+
 <dialog id="infoDialog">
   <button class="close" data-close aria-label="Cerrar">×</button>
-  <h2 id="infoTitle">Próximamente</h2><p id="infoText"></p>
+  <h2 id="infoTitle">Próximamente</h2>
+  <p id="infoText"></p>
   <button class="primary full" data-close>Entendido</button>
-  
+</dialog>
+
+<!-- Diagnóstico de errores -->
 <div id="fg-diagnostic" style="position:fixed;top:10px;left:10px;right:10px;z-index:99999;background:#fff3cd;color:#222;padding:14px;border:2px solid #d39e00;border-radius:8px;font-size:14px;">
   Diagnóstico: esperando que cargue la aplicación...
 </div>
@@ -67,21 +104,25 @@
 <script>
 window.addEventListener('error', function(e) {
   const box = document.getElementById('fg-diagnostic');
+
   if (box) {
     box.textContent = 'ERROR: ' +
-      (e.message || e.target.src || 'No se pudo cargar un archivo') +
+      (e.message || (e.target && e.target.src) || 'No se pudo cargar un archivo') +
       (e.lineno ? ' | Línea: ' + e.lineno : '');
   }
 }, true);
 
 window.addEventListener('unhandledrejection', function(e) {
   const box = document.getElementById('fg-diagnostic');
-  if (box) box.textContent = 'ERROR: ' + e.reason;
+
+  if (box) {
+    box.textContent = 'ERROR: ' + e.reason;
+  }
 });
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js?v=20261117"></script>
-  
-</dialog>
+<script src="app.js?v=20261118"></script>
+
+</body>
 </html>

@@ -1,3 +1,7 @@
+const SUPABASE_URL = 'https://azaimadkqssbsljpjdqo.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_UWmpG4BAoWVOJWuzVBppgQ_lwPXbUyP';
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const sampleEvents = [
  {id:1,title:'Gran Festival de Doma y Tradición',type:'Doma',place:'Mercedes, Corrientes',date:'Fecha de ejemplo: 21 de noviembre',price:'Precio a confirmar',icon:'🐎',description:'Jineteadas, música en vivo, comidas regionales y encuentro de tradición gaucha.'},
  {id:2,title:'Noche de Chamamé',type:'Baile',place:'Corrientes Capital, Corrientes',date:'Fecha de ejemplo: 27 de noviembre',price:'Consultar entradas',icon:'🪗',description:'Una noche para disfrutar de conjuntos chamameceros y baile popular.'},

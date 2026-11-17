@@ -33,7 +33,57 @@ try {
 // ==========================================
 // EVENTOS DE DEMOSTRACION
 // ==========================================
+let allEvents = sampleEvents;
 
+function getEventIcon(category) {
+  const icons = {
+    'Doma': '🐎',
+    'Baile': '🪗',
+    'Fiesta de campo': '🌾',
+    'Festival': '🎶'
+  };
+
+  return icons[category] || '🤠';
+}
+
+async function loadEvents() {
+  if (!supabaseClient) return;
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('events')
+      .select('*')
+      .eq('status', 'published')
+      .order('event_date', { ascending: true });
+
+    if (error) throw error;
+
+    if (data && data.length > 0) {
+      allEvents = data.map(event => ({
+        id: event.id,
+        title: event.title,
+        type: event.category || 'Evento gaucho',
+        place: [event.locality, event.province]
+          .filter(Boolean).join(', '),
+        date: event.event_date
+          ? new Date(event.event_date + 'T12:00:00')
+              .toLocaleDateString('es-AR')
+          : 'Fecha a confirmar',
+        price: event.price || 'Consultar entradas',
+        icon: getEventIcon(event.category),
+        description: event.description || 'Sin descripción disponible.',
+        isDemo: false
+      }));
+    }
+
+    render();
+
+  } catch (error) {
+    console.error('Error al cargar eventos:', error);
+    allEvents = sampleEvents;
+    render();
+  }
+}
 const sampleEvents = [
   {
     id: 1,

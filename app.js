@@ -7,7 +7,7 @@
 const SUPABASE_URL = 'https://azaimadkqssbsljpjdqo.supabase.co';
 
 // Pegá aquí tu Publishable Key de Supabase
-const SUPABASE_KEY = 'PEGAR_AQUI_TU_PUBLISHABLE_KEY';
+const SUPABASE_KEY = 'sb_publishable_UWmpG4BAoWVOJWuzVBppgQ_lwPXbUyP';
 
 if (!window.supabase) {
   alert('No se pudo cargar Supabase. Revisá la conexión.');

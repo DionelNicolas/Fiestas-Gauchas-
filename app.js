@@ -432,8 +432,6 @@ if ('serviceWorker' in navigator) {
 // INICIAR APLICACION
 // =====================================
 
-// INICIAR APLICACION
-
 try {
   const caja = document.querySelector('#events');
 
@@ -451,3 +449,4 @@ try {
 } catch (error) {
   alert('ERROR EN LA APLICACIÓN: ' + error.message);
 }
+

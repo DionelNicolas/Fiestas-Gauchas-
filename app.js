@@ -1013,13 +1013,6 @@ async function setupApp() {
 
   await loadEvents();
 
-  const diagnostic = document.querySelector('#fg-diagnostic');
-
-  if (diagnostic) {
-    diagnostic.textContent =
-      'Diagnóstico: aplicación cargada correctamente.';
-  }
-
   console.log('Fiestas Gauchas está funcionando.');
 }
 

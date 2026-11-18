@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="es">
 <head>
@@ -6,145 +5,352 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#234b36">
   <meta name="description" content="Encontrá domas, jineteadas, bailes y fiestas populares en toda Argentina.">
-
-  <title>Fiestas gauchas 🇦🇷</title>
+  <title>Fiestas Gauchas 🇦🇷</title>
 
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css?v=20261118">
 </head>
 
 <body>
+  <header class="topbar">
+    <a class="brand" href="#" id="brandHome" aria-label="Fiestas Gauchas, inicio">
+      <span class="brand-mark">🇦🇷</span>
+      <span>
+        <strong>Fiestas gauchas</strong>
+        <small>Tradición argentina</small>
+      </span>
+    </a>
+    <button class="icon-btn" id="profileBtn" aria-label="Mi cuenta">♙</button>
+  </header>
 
-<header class="topbar">
-  <div class="brand">
-    <span class="flag">🇦🇷</span>
-    <span>Fiestas gauchas</span>
-  </div>
+  <main>
+    <section class="hero">
+      <div class="hero-content">
+        <p class="eyebrow">RAÍCES QUE NOS UNEN</p>
+        <h1>La tradición se vive en cada encuentro.</h1>
+        <p class="hero-copy">
+          Descubrí jineteadas, festivales, bailes y fiestas populares
+          en cada rincón de Argentina.
+        </p>
+        <label class="search">
+          <span aria-hidden="true">⌕</span>
+          <input id="search" type="search"
+            placeholder="Buscar evento, localidad o provincia..."
+            autocomplete="off">
+        </label>
+      </div>
+      <div class="hero-decoration" aria-hidden="true">🤠</div>
+    </section>
 
-  <button class="icon-btn" id="profileBtn" aria-label="Perfil">
-    ♙
-  </button>
-</header>
+    <section class="quick-filters" aria-label="Filtrar eventos">
+      <button class="chip active" data-filter="Todos">Todos</button>
+      <button class="chip" data-filter="Doma">Doma y jineteada</button>
+      <button class="chip" data-filter="Baile">Bailes</button>
+      <button class="chip" data-filter="Fiesta de campo">Fiestas de campo</button>
+      <button class="chip" data-filter="Festival">Festivales</button>
+    </section>
 
-<main>
+    <section class="section-head">
+      <div>
+        <p class="eyebrow">AGENDA POPULAR</p>
+        <h2>Próximos encuentros</h2>
+        <p class="section-subtitle">Encontrá tu próxima fiesta.</p>
+      </div>
+      <span id="count" class="count">Cargando...</span>
+    </section>
 
-  <section class="hero">
-    <p class="eyebrow">TRADICIÓN ARGENTINA</p>
+    <section id="events" class="events" aria-live="polite">
+      <div class="loading-state">
+        <span class="loader"></span>
+        <p>Cargando eventos...</p>
+      </div>
+    </section>
 
-    <h1>La tradición se vive en cada encuentro.</h1>
+    <section class="organizer">
+      <div class="organizer-icon">📣</div>
+      <div class="organizer-copy">
+        <p class="eyebrow">¿ORGANIZÁS UNA FIESTA?</p>
+        <h2>Tu evento merece ser conocido.</h2>
+        <p>Solicitá tu cuenta de organizador. Una vez aprobada, vas a poder publicar y administrar tus eventos.</p>
+        <button id="organizerBtn" class="button button-light">
+          Quiero publicar <span>→</span>
+        </button>
+      </div>
+    </section>
 
-    <p class="sub">
-      Encontrá domas, bailes y fiestas populares en toda Argentina.
+    <p class="disclaimer">
+      La información de los eventos es publicada por sus organizadores.
+      Confirmá siempre fecha, lugar y entradas antes de viajar.
     </p>
+  </main>
 
-    <label class="search">
-      <span>⌕</span>
-      <input
-        id="search"
-        type="search"
-        placeholder="Buscar evento o localidad..."
-        autocomplete="off"
-      >
-    </label>
-  </section>
-
-  <nav class="chips" aria-label="Filtrar eventos">
-    <button class="chip active" data-filter="Todos">Todos</button>
-    <button class="chip" data-filter="Doma">Domas</button>
-    <button class="chip" data-filter="Baile">Bailes</button>
-    <button class="chip" data-filter="Fiesta de campo">
-      Fiestas de campo
+  <nav class="bottom-nav" aria-label="Navegación principal">
+    <button class="nav-item active" data-page="home">
+      <span>⌂</span><small>Inicio</small>
+    </button>
+    <button class="nav-item" data-page="map">
+      <span>⌖</span><small>Mapa</small>
+    </button>
+    <button class="nav-item" data-page="saved">
+      <span>♡</span><small>Guardados</small>
+    </button>
+    <button class="nav-item" data-page="account">
+      <span>♙</span><small>Cuenta</small>
     </button>
   </nav>
 
-  <section class="section-head">
-    <div>
-      <p class="eyebrow">AGENDA POPULAR</p>
-      <h2>Eventos para descubrir</h2>
+  <!-- DETALLE DEL EVENTO -->
+  <dialog id="detailDialog" class="app-dialog">
+    <button class="dialog-close" data-close aria-label="Cerrar">×</button>
+    <div id="detailContent"></div>
+  </dialog>
+
+  <!-- MENSAJES -->
+  <dialog id="infoDialog" class="app-dialog small-dialog">
+    <button class="dialog-close" data-close aria-label="Cerrar">×</button>
+    <div class="dialog-inner">
+      <div class="dialog-symbol">🤠</div>
+      <h2 id="infoTitle">Fiestas Gauchas</h2>
+      <p id="infoText"></p>
+      <button class="button button-primary full" data-close>Entendido</button>
     </div>
+  </dialog>
 
-    <span id="count" class="count"></span>
-  </section>
+  <!-- CUENTA -->
+  <dialog id="accountDialog" class="app-dialog form-dialog">
+    <button class="dialog-close" data-close aria-label="Cerrar">×</button>
+    <div class="dialog-inner">
+      <p class="eyebrow">BIENVENIDO A FIESTAS GAUCHAS</p>
+      <h2 id="accountTitle">Tu cuenta</h2>
+      <p id="accountSubtitle" class="form-intro">Ingresá o creá tu cuenta para participar.</p>
 
-  <section
-    id="events"
-    class="events"
-    aria-live="polite"
-  ></section>
+      <div id="accountLogged" class="hidden">
+        <div class="user-card">
+          <span class="user-avatar">♙</span>
+          <div>
+            <strong id="accountEmail"></strong>
+            <small>Sesión iniciada</small>
+          </div>
+        </div>
+        <button id="myRequestBtn" class="button button-outline full">Consultar mi solicitud de organizador</button>
+        <button id="signOutBtn" class="button button-danger full">Cerrar sesión</button>
+      </div>
 
-  <section class="organizer">
-    <div>
-      <p class="eyebrow">¿ORGANIZÁS UN EVENTO?</p>
+      <div id="accountForms">
+        <div class="form-tabs">
+          <button type="button" class="form-tab active" data-account-tab="login">Iniciar sesión</button>
+          <button type="button" class="form-tab" data-account-tab="register">Crear cuenta</button>
+        </div>
 
-      <h2>Compartilo con todo el país.</h2>
+        <form id="loginForm" class="app-form">
+          <label>Correo electrónico
+            <input type="email" name="email" required autocomplete="email" placeholder="tu correo">
+          </label>
+          <label>Contraseña
+            <input type="password" name="password" required minlength="6" autocomplete="current-password" placeholder="Tu contraseña">
+          </label>
+          <button class="button button-primary full" type="submit">Ingresar</button>
+          <button class="text-button" type="button" id="forgotPasswordBtn">Olvidé mi contraseña</button>
+        </form>
 
-      <p>
-        Solicitá tu cuenta de organizador y publicá tus eventos
-        una vez aprobada.
-      </p>
-
-      <button id="organizerBtn" class="primary">
-        Quiero publicar
-      </button>
+        <form id="registerForm" class="app-form hidden">
+          <label>Nombre y apellido
+            <input type="text" name="full_name" required maxlength="100" autocomplete="name" placeholder="Tu nombre completo">
+          </label>
+          <label>Correo electrónico
+            <input type="email" name="email" required autocomplete="email" placeholder="tu correo">
+          </label>
+          <label>Contraseña
+            <input type="password" name="password" required minlength="6" autocomplete="new-password" placeholder="Mínimo 6 caracteres">
+          </label>
+          <label>Repetir contraseña
+            <input type="password" name="password2" required minlength="6" autocomplete="new-password" placeholder="Repetí tu contraseña">
+          </label>
+          <button class="button button-primary full" type="submit">Crear mi cuenta</button>
+          <p class="form-note">Al registrarte, podrás comentar, puntuar y participar en la comunidad.</p>
+        </form>
+      </div>
     </div>
-  </section>
+  </dialog>
 
-  <p class="disclaimer">
-    Confirmá siempre fecha, lugar y entradas con el organizador.
-  </p>
+  <!-- SOLICITUD DE ORGANIZADOR -->
+  <dialog id="organizerDialog" class="app-dialog form-dialog">
+    <button class="dialog-close" data-close aria-label="Cerrar">×</button>
+    <div class="dialog-inner">
+      <p class="eyebrow">PUBLICÁ TUS EVENTOS</p>
+      <h2>Solicitud de organizador</h2>
+      <p class="form-intro">Completá tus datos. El administrador revisará tu solicitud.</p>
+      <form id="organizerForm" class="app-form">
+        <label>Nombre y apellido
+          <input name="full_name" required maxlength="100" placeholder="Tu nombre completo">
+        </label>
+        <label>Agrupación, institución u organización
+          <input name="organization_name" required maxlength="150" placeholder="Nombre de la organización">
+        </label>
+        <label>Teléfono
+          <input name="phone" type="tel" maxlength="40" placeholder="Tu número de contacto">
+        </label>
+        <label>¿Qué eventos organizás?
+          <textarea name="message" rows="3" maxlength="1000" placeholder="Contanos un poco sobre tus actividades"></textarea>
+        </label>
+        <button class="button button-primary full" type="submit">Enviar solicitud</button>
+      </form>
+    </div>
+  </dialog>
 
-</main>
+  <!-- PUBLICAR / EDITAR EVENTO -->
+  <dialog id="eventDialog" class="app-dialog form-dialog wide-dialog">
+    <button class="dialog-close" data-close aria-label="Cerrar">×</button>
+    <div class="dialog-inner">
+      <p class="eyebrow">COMPARTÍ LA TRADICIÓN</p>
+      <h2 id="eventFormTitle">Publicar un evento</h2>
+      <p class="form-intro">Completá la información de tu fiesta. Los campos marcados son obligatorios.</p>
 
-<nav class="bottom-nav">
+      <form id="eventForm" class="app-form">
+        <input type="hidden" name="event_id">
 
-  <button class="nav-item active" data-page="home">
-    <span>⌂</span>
-    Inicio
-  </button>
+        <div class="form-section-title">Información principal</div>
+        <label>Nombre del evento *
+          <input name="title" required maxlength="160" placeholder="Ej. Gran Festival de Doma y Tradición">
+        </label>
 
-  <button class="nav-item" data-page="map">
-    <span>⌖</span>
-    Mapa
-  </button>
+        <div class="form-grid">
+          <label>Tipo de evento *
+            <select name="category" required>
+              <option value="">Seleccionar</option>
+              <option value="Doma">Doma y jineteada</option>
+              <option value="Baile">Baile</option>
+              <option value="Fiesta de campo">Fiesta de campo</option>
+              <option value="Festival">Festival</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </label>
+          <label>Provincia *
+            <input name="province" required maxlength="100" placeholder="Ej. Corrientes">
+          </label>
+        </div>
 
-  <button class="nav-item" data-page="saved">
-    <span>♡</span>
-    Guardados
-  </button>
+        <label>Descripción
+          <textarea name="description" rows="4" maxlength="5000" placeholder="Contá qué actividades habrá, artistas, jineteadas y más..."></textarea>
+        </label>
 
-  <button class="nav-item" data-page="account">
-    <span>♙</span>
-    Cuenta
-  </button>
+        <div class="form-section-title">Fecha y lugar</div>
+        <div class="form-grid">
+          <label>Localidad *
+            <input name="locality" required maxlength="120" placeholder="Localidad">
+          </label>
+          <label>Predio o lugar
+            <input name="venue" maxlength="180" placeholder="Nombre del predio">
+          </label>
+        </div>
 
-</nav>
+        <label>Dirección
+          <input name="address" maxlength="250" placeholder="Dirección o referencia">
+        </label>
 
-<dialog id="detailDialog">
-  <button class="close" data-close aria-label="Cerrar">
-    ×
-  </button>
+        <label>Enlace de ubicación en Google Maps
+          <input name="maps_url" type="url" maxlength="1000" placeholder="https://maps.google.com/...">
+        </label>
 
-  <div id="detailContent"></div>
-</dialog>
+        <div class="form-grid">
+          <label>Fecha de inicio *
+            <input name="event_date" type="date" required>
+          </label>
+          <label>Fecha de finalización
+            <input name="end_date" type="date">
+          </label>
+        </div>
 
-<dialog id="infoDialog">
-  <button class="close" data-close aria-label="Cerrar">
-    ×
-  </button>
+        <label>Horario de finalización
+          <input name="end_time" type="time">
+        </label>
 
-  <h2 id="infoTitle">Próximamente</h2>
+        <div class="form-section-title">Entradas y condiciones</div>
+        <div class="form-grid">
+          <label>Precio anticipado
+            <input name="presale_price" maxlength="100" placeholder="Ej. $8.000">
+          </label>
+          <label>Precio en puerta
+            <input name="door_price" maxlength="100" placeholder="Ej. $10.000">
+          </label>
+        </div>
 
-  <p id="infoText"></p>
+        <label>Información sobre entradas
+          <textarea name="ticket_notes" rows="2" maxlength="1000" placeholder="Puntos de venta, reservas, promociones..."></textarea>
+        </label>
 
-  <button class="primary full" data-close>
-    Entendido
-  </button>
-</dialog>
+        <label>Información para menores
+          <input name="minors_info" maxlength="300" placeholder="Ej. Menores acompañados por un adulto">
+        </label>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        <div class="form-section-title">Servicios disponibles</div>
+        <div class="check-grid">
+          <label class="check-option"><input type="checkbox" name="has_food"> <span>🍽️ Cantina / comidas</span></label>
+          <label class="check-option"><input type="checkbox" name="has_parking"> <span>🚗 Estacionamiento</span></label>
+          <label class="check-option"><input type="checkbox" name="has_camping"> <span>⛺ Camping</span></label>
+        </div>
 
-<script src="app.js?v=20261124"></script>
+        <div class="form-section-title">Contacto del organizador</div>
+        <div class="form-grid">
+          <label>Teléfono
+            <input name="contact_phone" type="tel" maxlength="40" placeholder="Teléfono">
+          </label>
+          <label>WhatsApp
+            <input name="whatsapp" type="tel" maxlength="40" placeholder="Número de WhatsApp">
+          </label>
+        </div>
 
+        <div class="form-grid">
+          <label>Instagram
+            <input name="instagram" maxlength="250" placeholder="@usuario o enlace">
+          </label>
+          <label>Facebook
+            <input name="facebook" maxlength="500" placeholder="Enlace de Facebook">
+          </label>
+        </div>
+
+        <div class="form-section-title">Imagen o volante</div>
+        <label class="upload-box">
+          <span class="upload-icon">▧</span>
+          <strong>Seleccionar volante del evento</strong>
+          <small>Imagen JPG, PNG o WEBP. Máximo 8 MB.</small>
+          <input name="flyer" type="file" accept="image/jpeg,image/png,image/webp">
+        </label>
+        <div id="flyerPreview" class="flyer-preview"></div>
+
+        <div class="form-actions">
+          <button type="button" class="button button-outline" data-close>Cancelar</button>
+          <button type="submit" class="button button-primary" id="saveEventBtn">Publicar evento</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- PANEL DE ADMINISTRACIÓN -->
+  <dialog id="adminDialog" class="app-dialog wide-dialog">
+    <button class="dialog-close" data-close aria-label="Cerrar">×</button>
+    <div class="dialog-inner">
+      <p class="eyebrow">GESTIÓN DE LA COMUNIDAD</p>
+      <h2>Panel administrador</h2>
+
+      <div class="admin-tabs">
+        <button class="admin-tab active" data-admin-tab="requests">Solicitudes</button>
+        <button class="admin-tab" data-admin-tab="events">Eventos</button>
+      </div>
+
+      <section id="adminRequests" class="admin-list">
+        Cargando solicitudes...
+      </section>
+      <section id="adminEvents" class="admin-list hidden">
+        Cargando eventos...
+      </section>
+    </div>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js?v=20261118"></script>
 </body>
 </html>

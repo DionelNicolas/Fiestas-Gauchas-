@@ -1013,8 +1013,6 @@ async function setupApp() {
 
   await loadEvents();
 
-  console.log('Fiestas Gauchas está funcionando.');
-}
 
 // ==========================================
 // INICIAR CUANDO CARGUE EL DOCUMENTO

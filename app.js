@@ -1234,6 +1234,7 @@ function buildEventForm() {
 // VISTA PREVIA DEL FLYER
 // =========================================================
 
+
 function previewFlyer() {
     const form = $('#eventForm');
     const file = form?.elements.namedItem('flyer')?.files?.[0];
@@ -1248,6 +1249,31 @@ function previewFlyer() {
 
     if (!file.type.startsWith('image/')) {
         showToast('El archivo seleccionado no es una imagen.', 'error');
+        preview.innerHTML = '';
+        return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('La imagen no puede superar los 5 MB.', 'error');
+        preview.innerHTML = '';
+        return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = function(event) {
+        preview.innerHTML = `
+            <img src="${event.target.result}" alt="Vista previa del flyer">
+        `;
+    };
+
+    reader.onerror = function() {
+        showToast('No se pudo visualizar la imagen.', 'error');
+    };
+
+    reader.readAsDataURL(file);
+}
+
    
 // =========================================================
 // EDITAR EVENTO

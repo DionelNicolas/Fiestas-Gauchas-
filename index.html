@@ -21,19 +21,31 @@
     <span class="flag">🇦🇷</span>
     <span>Fiestas gauchas</span>
   </div>
-  <button class="icon-btn" id="profileBtn" aria-label="Perfil">♙</button>
+
+  <button class="icon-btn" id="profileBtn" aria-label="Perfil">
+    ♙
+  </button>
 </header>
 
 <main>
 
   <section class="hero">
     <p class="eyebrow">TRADICIÓN ARGENTINA</p>
+
     <h1>La tradición se vive en cada encuentro.</h1>
-    <p class="sub">Encontrá domas, bailes y fiestas populares en toda Argentina.</p>
+
+    <p class="sub">
+      Encontrá domas, bailes y fiestas populares en toda Argentina.
+    </p>
 
     <label class="search">
       <span>⌕</span>
-      <input id="search" type="search" placeholder="Buscar evento o localidad..." autocomplete="off">
+      <input
+        id="search"
+        type="search"
+        placeholder="Buscar evento o localidad..."
+        autocomplete="off"
+      >
     </label>
   </section>
 
@@ -41,7 +53,9 @@
     <button class="chip active" data-filter="Todos">Todos</button>
     <button class="chip" data-filter="Doma">Domas</button>
     <button class="chip" data-filter="Baile">Bailes</button>
-    <button class="chip" data-filter="Fiesta de campo">Fiestas de campo</button>
+    <button class="chip" data-filter="Fiesta de campo">
+      Fiestas de campo
+    </button>
   </nav>
 
   <section class="section-head">
@@ -49,17 +63,30 @@
       <p class="eyebrow">AGENDA POPULAR</p>
       <h2>Eventos para descubrir</h2>
     </div>
+
     <span id="count" class="count"></span>
   </section>
 
-  <section id="events" class="events" aria-live="polite"></section>
+  <section
+    id="events"
+    class="events"
+    aria-live="polite"
+  ></section>
 
   <section class="organizer">
     <div>
       <p class="eyebrow">¿ORGANIZÁS UN EVENTO?</p>
+
       <h2>Compartilo con todo el país.</h2>
-      <p>Solicitá tu cuenta de organizador y publicá tus eventos una vez aprobada.</p>
-      <button id="organizerBtn" class="primary">Quiero publicar</button>
+
+      <p>
+        Solicitá tu cuenta de organizador y publicá tus eventos
+        una vez aprobada.
+      </p>
+
+      <button id="organizerBtn" class="primary">
+        Quiero publicar
+      </button>
     </div>
   </section>
 
@@ -70,58 +97,54 @@
 </main>
 
 <nav class="bottom-nav">
+
   <button class="nav-item active" data-page="home">
+    <span>⌂</span>
+    Inicio
   </button>
+
   <button class="nav-item" data-page="map">
-    <span>⌖</span>Mapa
+    <span>⌖</span>
+    Mapa
   </button>
+
   <button class="nav-item" data-page="saved">
-    <span>♡</span>Guardados
+    <span>♡</span>
+    Guardados
   </button>
+
   <button class="nav-item" data-page="account">
-    <span>♙</span>Cuenta
+    <span>♙</span>
+    Cuenta
   </button>
+
 </nav>
 
 <dialog id="detailDialog">
-  <button class="close" data-close aria-label="Cerrar">×</button>
+  <button class="close" data-close aria-label="Cerrar">
+    ×
+  </button>
+
   <div id="detailContent"></div>
 </dialog>
 
 <dialog id="infoDialog">
-  <button class="close" data-close aria-label="Cerrar">×</button>
+  <button class="close" data-close aria-label="Cerrar">
+    ×
+  </button>
+
   <h2 id="infoTitle">Próximamente</h2>
+
   <p id="infoText"></p>
-  <button class="primary full" data-close>Entendido</button>
+
+  <button class="primary full" data-close>
+    Entendido
+  </button>
 </dialog>
 
-<!-- Diagnóstico de errores -->
-<div id="fg-diagnostic" style="position:fixed;top:10px;left:10px;right:10px;z-index:99999;background:#fff3cd;color:#222;padding:14px;border:2px solid #d39e00;border-radius:8px;font-size:14px;">
-  Diagnóstico: esperando que cargue la aplicación...
-</div>
-
-<script>
-window.addEventListener('error', function(e) {
-  const box = document.getElementById('fg-diagnostic');
-
-  if (box) {
-    box.textContent = 'ERROR: ' +
-      (e.message || (e.target && e.target.src) || 'No se pudo cargar un archivo') +
-      (e.lineno ? ' | Línea: ' + e.lineno : '');
-  }
-}, true);
-
-window.addEventListener('unhandledrejection', function(e) {
-  const box = document.getElementById('fg-diagnostic');
-
-  if (box) {
-    box.textContent = 'ERROR: ' + e.reason;
-  }
-});
-</script>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js?v=20261121"></script>
+
+<script src="app.js?v=20261122"></script>
 
 </body>
 </html>

@@ -782,11 +782,16 @@ async function accountAccess() {
 
       alert('¡Iniciaste sesión correctamente!');
 
-    } else {
-      const { data, error } = await supabaseClient.auth.signUp({
-        email: email.trim(),
-        password
-      });
+    
+} else {
+  const { data, error } = await supabaseClient.auth.signUp({
+    email: email.trim(),
+    password,
+    options: {
+      emailRedirectTo: 'https://dionelnicolas.github.io/Fiestas-Gauchas-/'
+    }
+  });
+       
 
       if (error) throw error;
 

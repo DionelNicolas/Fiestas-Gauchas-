@@ -2,21 +2,30 @@
 /* ==========================================
    FIESTAS GAUCHAS 🇦🇷
    APLICACIÓN COMPLETA - SUPABASE
-   BLOQUE 1 DE 2
+   PARTE 1 DE 2
    ========================================== */
 
+// ==========================================
+// CONFIGURACIÓN SUPABASE
+// ==========================================
+
 const SUPABASE_URL = 'https://azaimadkqssbsljpjdqo.supabase.co';
+
 const SUPABASE_KEY = 'sb_publishable_UWmpG4BAoWVOJWuzVBppgQ_lwPXbUyP';
 
 let supabaseClient = null;
+
 let filter = 'Todos';
 let query = '';
 let page = 'home';
+
 let eventsEl = null;
 let searchInput = null;
 let allEvents = [];
+
 let adminDialog = null;
 let adminButton = null;
+let appInitialized = false;
 
 // ==========================================
 // CONEXIÓN SUPABASE
@@ -28,6 +37,7 @@ try {
       SUPABASE_URL,
       SUPABASE_KEY
     );
+
     console.log('Supabase conectado correctamente.');
   } else {
     console.error('No se encontró la librería Supabase.');
@@ -81,6 +91,7 @@ async function loadEvents() {
   if (!supabaseClient) {
     allEvents = [];
     render();
+
     showLoadError('No se pudo conectar con Supabase.');
     return;
   }
@@ -101,15 +112,19 @@ async function loadEvents() {
       id: event.id,
       title: event.title || 'Evento sin título',
       type: event.category || 'Evento gaucho',
+
       place: [
         event.locality,
         event.province
       ].filter(Boolean).join(', ') || 'Ubicación a confirmar',
+
       venue: event.venue || '',
       date: formatDate(event.event_date),
       price: event.price || 'Consultar entradas',
       icon: getEventIcon(event.category),
-      description: event.description || 'Sin descripción disponible.'
+
+      description:
+        event.description || 'Sin descripción disponible.'
     }));
 
     render();
@@ -162,7 +177,10 @@ function getSaved() {
 
 function saveFavorites(ids) {
   try {
-    localStorage.setItem('fg_saved', JSON.stringify(ids));
+    localStorage.setItem(
+      'fg_saved',
+      JSON.stringify(ids)
+    );
   } catch (error) {
     console.error('Error guardando favoritos:', error);
   }
@@ -213,23 +231,35 @@ function render() {
             : 'No hay eventos para mostrar con esta búsqueda.'}
       </div>
     `;
+
     return;
   }
 
   eventsEl.innerHTML = list.map(event => `
-    <article class="event-card"
+    <article
+      class="event-card"
       data-id="${escapeHTML(event.id)}"
       role="button"
-      tabindex="0">
-
+      tabindex="0"
+    >
       <div class="event-art">${event.icon}</div>
 
       <div class="event-info">
         <div class="tag">${escapeHTML(event.type)}</div>
+
         <h3>${escapeHTML(event.title)}</h3>
-        <p class="meta">📍 ${escapeHTML(event.place)}</p>
-        <p class="meta">📅 ${escapeHTML(event.date)}</p>
-        <div class="price">${escapeHTML(event.price)}</div>
+
+        <p class="meta">
+          📍 ${escapeHTML(event.place)}
+        </p>
+
+        <p class="meta">
+          📅 ${escapeHTML(event.date)}
+        </p>
+
+        <div class="price">
+          ${escapeHTML(event.price)}
+        </div>
       </div>
 
       <div class="arrow">›</div>
@@ -253,20 +283,32 @@ function openDetail(event) {
 
   detail.innerHTML = `
     <div class="detail-art">${event.icon}</div>
-    <div class="tag">${escapeHTML(event.type)}</div>
+
+    <div class="tag">
+      ${escapeHTML(event.type)}
+    </div>
 
     <h2 class="detail-title">
       ${escapeHTML(event.title)}
     </h2>
 
-    <p class="meta">📍 ${escapeHTML(event.place)}</p>
+    <p class="meta">
+      📍 ${escapeHTML(event.place)}
+    </p>
 
     ${event.venue ? `
-      <p class="meta">📌 ${escapeHTML(event.venue)}</p>
+      <p class="meta">
+        📌 ${escapeHTML(event.venue)}
+      </p>
     ` : ''}
 
-    <p class="meta">📅 ${escapeHTML(event.date)}</p>
-    <p class="price">${escapeHTML(event.price)}</p>
+    <p class="meta">
+      📅 ${escapeHTML(event.date)}
+    </p>
+
+    <p class="price">
+      ${escapeHTML(event.price)}
+    </p>
 
     <p class="detail-copy">
       ${escapeHTML(event.description)}
@@ -282,7 +324,9 @@ function openDetail(event) {
 
       let favorites = getSaved();
 
-      if (favorites.some(id => String(id) === String(event.id))) {
+      if (favorites.some(
+        id => String(id) === String(event.id)
+      )) {
         favorites = favorites.filter(
           id => String(id) !== String(event.id)
         );
@@ -291,6 +335,7 @@ function openDetail(event) {
       }
 
       saveFavorites(favorites);
+
       render();
       openDetail(event);
     });
@@ -358,20 +403,27 @@ async function checkAdmin() {
     if (error) throw error;
 
     const isAdmin = data === true;
+
     updateAdminButton(isAdmin);
 
     return isAdmin;
 
   } catch (error) {
-    console.error('Error comprobando administrador:', error);
+    console.error(
+      'Error comprobando administrador:',
+      error
+    );
+
     updateAdminButton(false);
+
     return false;
   }
 }
 
 function updateAdminButton(isAdmin) {
   if (adminButton) {
-    adminButton.style.display = isAdmin ? 'block' : 'none';
+    adminButton.style.display =
+      isAdmin ? 'block' : 'none';
   }
 }
 
@@ -380,22 +432,32 @@ function updateAdminButton(isAdmin) {
 // ==========================================
 
 function createAdminButton() {
-  const organizer = document.querySelector('#organizerBtn');
+  const organizer =
+    document.querySelector('#organizerBtn');
 
   if (!organizer || adminButton) return;
 
   adminButton = document.createElement('button');
+
   adminButton.id = 'adminPanelBtn';
   adminButton.className = 'primary';
   adminButton.type = 'button';
-  adminButton.textContent = '🛡️ Panel administrador';
+
+  adminButton.textContent =
+    '🛡️ Panel administrador';
 
   adminButton.style.cssText =
     'display:none;margin:10px 0;padding:12px;width:100%;';
 
-  organizer.insertAdjacentElement('afterend', adminButton);
+  organizer.insertAdjacentElement(
+    'afterend',
+    adminButton
+  );
 
-  adminButton.addEventListener('click', openAdminPanel);
+  adminButton.addEventListener(
+    'click',
+    openAdminPanel
+  );
 }
 
 // ==========================================
@@ -407,7 +469,10 @@ async function requestOrganizer() {
     const session = await getCurrentSession();
 
     if (!session) {
-      alert('Primero tenés que iniciar sesión desde Cuenta.');
+      alert(
+        'Primero tenés que iniciar sesión desde Cuenta.'
+      );
+
       return;
     }
 
@@ -422,27 +487,38 @@ async function requestOrganizer() {
 
     if (existing) {
       const labels = {
-        pending: 'Tu solicitud está pendiente de aprobación.',
-        approved: 'Tu solicitud fue aprobada. Ya sos organizador.',
-        rejected: 'Tu solicitud fue rechazada.'
+        pending:
+          'Tu solicitud está pendiente de aprobación.',
+
+        approved:
+          'Tu solicitud fue aprobada. Ya sos organizador.',
+
+        rejected:
+          'Tu solicitud fue rechazada.'
       };
 
       alert(
         labels[existing.status] ||
         'Ya tenés una solicitud registrada.'
       );
+
       return;
     }
 
-    const fullName = prompt('Ingresá tu nombre y apellido:');
+    const fullName = prompt(
+      'Ingresá tu nombre y apellido:'
+    );
+
     if (!fullName || !fullName.trim()) return;
 
     const organization = prompt(
       'Ingresá el nombre de tu agrupación, institución u organización:'
     );
+
     if (!organization || !organization.trim()) return;
 
-    const phone = prompt('Ingresá tu número de teléfono:') || '';
+    const phone =
+      prompt('Ingresá tu número de teléfono:') || '';
 
     const message = prompt(
       'Contanos qué tipo de eventos organizás (opcional):'
@@ -468,7 +544,11 @@ async function requestOrganizer() {
 
   } catch (error) {
     console.error(error);
-    alert('No se pudo enviar la solicitud: ' + error.message);
+
+    alert(
+      'No se pudo enviar la solicitud: ' +
+      error.message
+    );
   }
 }
 
@@ -494,7 +574,10 @@ async function checkMyRequest() {
     if (error) throw error;
 
     if (!data) {
-      alert('Todavía no enviaste una solicitud para ser organizador.');
+      alert(
+        'Todavía no enviaste una solicitud para ser organizador.'
+      );
+
       return;
     }
 
@@ -508,11 +591,15 @@ async function checkMyRequest() {
       'ESTADO DE TU SOLICITUD\n\n' +
       'Nombre: ' + data.full_name + '\n' +
       'Organización: ' + data.organization_name + '\n' +
-      'Estado: ' + (labels[data.status] || data.status)
+      'Estado: ' +
+      (labels[data.status] || data.status)
     );
 
   } catch (error) {
-    alert('Error consultando solicitud: ' + error.message);
+    alert(
+      'Error consultando solicitud: ' +
+      error.message
+    );
   }
 }
 
@@ -522,34 +609,45 @@ async function checkMyRequest() {
 
 function createAdminDialog() {
   if (document.querySelector('#adminDialog')) {
-    adminDialog = document.querySelector('#adminDialog');
+    adminDialog =
+      document.querySelector('#adminDialog');
+
     return;
   }
 
   adminDialog = document.createElement('dialog');
+
   adminDialog.id = 'adminDialog';
 
   adminDialog.innerHTML = `
     <div style="padding:20px;max-height:80vh;overflow:auto;">
+
       <h2>🛡️ Panel administrador</h2>
+
       <p>Solicitudes de organizadores</p>
 
       <div id="adminRequests">
         Cargando solicitudes...
       </div>
 
-      <button id="closeAdminDialog"
+      <button
+        id="closeAdminDialog"
         class="primary full"
-        style="margin-top:15px;">
+        style="margin-top:15px;"
+      >
         Cerrar
       </button>
+
     </div>
   `;
 
   document.body.appendChild(adminDialog);
 
-  adminDialog.querySelector('#closeAdminDialog')
-    .addEventListener('click', () => adminDialog.close());
+  adminDialog
+    .querySelector('#closeAdminDialog')
+    .addEventListener('click', () => {
+      adminDialog.close();
+    });
 }
 
 // ==========================================
@@ -578,11 +676,13 @@ async function openAdminPanel() {
 // ==========================================
 
 async function loadAdminRequests() {
-  const container = document.querySelector('#adminRequests');
+  const container =
+    document.querySelector('#adminRequests');
 
   if (!container) return;
 
-  container.innerHTML = 'Cargando solicitudes...';
+  container.innerHTML =
+    'Cargando solicitudes...';
 
   try {
     const { data, error } = await supabaseClient
@@ -596,6 +696,7 @@ async function loadAdminRequests() {
       container.innerHTML = `
         <p>No hay solicitudes de organizadores.</p>
       `;
+
       return;
     }
 
@@ -613,7 +714,10 @@ async function loadAdminRequests() {
           padding:12px;
           margin:12px 0;
         ">
-          <h3>${escapeHTML(request.full_name)}</h3>
+
+          <h3>
+            ${escapeHTML(request.full_name)}
+          </h3>
 
           <p>
             <strong>Organización:</strong>
@@ -632,24 +736,30 @@ async function loadAdminRequests() {
 
           <p>
             <strong>Estado:</strong>
-            ${statusLabels[request.status] || escapeHTML(request.status)}
+            ${statusLabels[request.status] ||
+              escapeHTML(request.status)}
           </p>
 
           ${request.status === 'pending' ? `
+
             <button
               class="primary"
               data-action="approve"
-              data-id="${escapeHTML(request.id)}">
+              data-id="${escapeHTML(request.id)}"
+            >
               Aprobar
             </button>
 
             <button
               class="secondary"
               data-action="reject"
-              data-id="${escapeHTML(request.id)}">
+              data-id="${escapeHTML(request.id)}"
+            >
               Rechazar
             </button>
+
           ` : ''}
+
         </div>
       `;
     }).join('');
@@ -662,17 +772,27 @@ async function loadAdminRequests() {
           const action = button.dataset.action;
 
           if (action === 'approve') {
-            await updateOrganizerRequest(id, 'approved');
+            await updateOrganizerRequest(
+              id,
+              'approved'
+            );
           }
 
           if (action === 'reject') {
-            await updateOrganizerRequest(id, 'rejected');
+            await updateOrganizerRequest(
+              id,
+              'rejected'
+            );
           }
         });
+
       });
 
   } catch (error) {
-    console.error('Error cargando solicitudes:', error);
+    console.error(
+      'Error cargando solicitudes:',
+      error
+    );
 
     container.innerHTML = `
       <p>No se pudieron cargar las solicitudes.</p>
@@ -690,7 +810,9 @@ async function updateOrganizerRequest(id, status) {
     ? 'aprobar'
     : 'rechazar';
 
-  if (!confirm(`¿Estás seguro de ${actionText} esta solicitud?`)) {
+  if (!confirm(
+    `¿Estás seguro de ${actionText} esta solicitud?`
+  )) {
     return;
   }
 
@@ -712,7 +834,11 @@ async function updateOrganizerRequest(id, status) {
 
   } catch (error) {
     console.error(error);
-    alert('No se pudo actualizar la solicitud: ' + error.message);
+
+    alert(
+      'No se pudo actualizar la solicitud: ' +
+      error.message
+    );
   }
 }
 
@@ -737,7 +863,8 @@ async function accountAccess() {
       );
 
       if (action) {
-        const { error } = await supabaseClient.auth.signOut();
+        const { error } =
+          await supabaseClient.auth.signOut();
 
         if (error) throw error;
 
@@ -756,42 +883,54 @@ async function accountAccess() {
       'Escribí 2 para crear una cuenta.'
     );
 
-    if (choice !== '1' && choice !== '2') return;
+    if (choice !== '1' && choice !== '2') {
+      return;
+    }
 
-    const email = prompt('Ingresá tu correo electrónico:');
+    const email = prompt(
+      'Ingresá tu correo electrónico:'
+    );
 
     if (!email || !email.includes('@')) {
       alert('Ingresá un correo electrónico válido.');
       return;
     }
 
-    const password = prompt('Ingresá tu contraseña:');
+    const password = prompt(
+      'Ingresá tu contraseña:'
+    );
 
     if (!password || password.length < 6) {
-      alert('La contraseña debe tener al menos 6 caracteres.');
+      alert(
+        'La contraseña debe tener al menos 6 caracteres.'
+      );
       return;
     }
 
     if (choice === '1') {
-      const { error } = await supabaseClient.auth.signInWithPassword({
-        email: email.trim(),
-        password
-      });
+
+      const { error } =
+        await supabaseClient.auth.signInWithPassword({
+          email: email.trim(),
+          password
+        });
 
       if (error) throw error;
 
       alert('¡Iniciaste sesión correctamente!');
 
-    
-} else {
-  const { data, error } = await supabaseClient.auth.signUp({
-    email: email.trim(),
-    password,
-    options: {
-      emailRedirectTo: 'https://dionelnicolas.github.io/Fiestas-Gauchas-/'
-    }
-  });
-       
+    } else {
+
+      const { data, error } =
+        await supabaseClient.auth.signUp({
+          email: email.trim(),
+          password,
+
+          options: {
+            emailRedirectTo:
+              'https://dionelnicolas.github.io/Fiestas-Gauchas-/'
+          }
+        });
 
       if (error) throw error;
 
@@ -812,7 +951,8 @@ async function accountAccess() {
     console.error('Error de cuenta:', error);
 
     alert(
-      'No se pudo completar la operación: ' + error.message
+      'No se pudo completar la operación: ' +
+      error.message
     );
   }
 }
@@ -822,7 +962,8 @@ async function accountAccess() {
 // ==========================================
 
 async function updateAccountButton() {
-  const button = document.querySelector('#profileBtn');
+  const button =
+    document.querySelector('#profileBtn');
 
   if (!button) return;
 
@@ -835,10 +976,17 @@ async function updateAccountButton() {
 
     button.setAttribute(
       'aria-label',
-      session ? 'Mi cuenta' : 'Ingresar o registrarse'
+      session
+        ? 'Mi cuenta'
+        : 'Ingresar o registrarse'
     );
 
   } catch (error) {
+    console.error(
+      'Error actualizando cuenta:',
+      error
+    );
+
     button.textContent = '♙';
   }
 }
@@ -848,34 +996,44 @@ async function updateAccountButton() {
 // ==========================================
 
 function setupNavigation() {
-  document.querySelectorAll('.nav-item[data-page]')
-    .forEach(button => {
+  document.querySelectorAll(
+    '.nav-item[data-page]'
+  ).forEach(button => {
 
-      button.addEventListener('click', async () => {
-        page = button.dataset.page;
+    button.addEventListener('click', async () => {
 
-        document.querySelectorAll('.nav-item[data-page]')
-          .forEach(item => {
-            item.classList.remove('active', 'selected');
-          });
+      page = button.dataset.page;
 
-        button.classList.add('active');
-
-        if (page === 'map') {
-          info(
-            'Mapa',
-            'La sección del mapa estará disponible próximamente.'
-          );
-        }
-
-        if (page === 'account') {
-          await accountAccess();
-        }
-
-        render();
+      document.querySelectorAll(
+        '.nav-item[data-page]'
+      ).forEach(item => {
+        item.classList.remove(
+          'active',
+          'selected'
+        );
       });
 
+      button.classList.add('active');
+
+      if (page === 'map') {
+        info(
+          'Mapa',
+          'La sección del mapa estará disponible próximamente.'
+        );
+
+        page = 'home';
+      }
+
+      if (page === 'account') {
+        await accountAccess();
+
+        page = 'home';
+      }
+
+      render();
     });
+
+  });
 }
 
 // ==========================================
@@ -883,12 +1041,16 @@ function setupNavigation() {
 // ==========================================
 
 function setupSearch() {
-  searchInput = document.querySelector('#search');
+  searchInput =
+    document.querySelector('#search');
 
   if (!searchInput) return;
 
   searchInput.addEventListener('input', () => {
-    query = searchInput.value.trim().toLowerCase();
+    query = searchInput.value
+      .trim()
+      .toLowerCase();
+
     render();
   });
 }
@@ -898,23 +1060,30 @@ function setupSearch() {
 // ==========================================
 
 function setupFilters() {
-  document.querySelectorAll('.chip[data-filter]')
-    .forEach(button => {
+  document.querySelectorAll(
+    '.chip[data-filter]'
+  ).forEach(button => {
 
-      button.addEventListener('click', () => {
-        filter = button.dataset.filter || 'Todos';
+    button.addEventListener('click', () => {
 
-        document.querySelectorAll('.chip[data-filter]')
-          .forEach(item => {
-            item.classList.remove('active', 'selected');
-          });
+      filter =
+        button.dataset.filter || 'Todos';
 
-        button.classList.add('active');
-
-        render();
+      document.querySelectorAll(
+        '.chip[data-filter]'
+      ).forEach(item => {
+        item.classList.remove(
+          'active',
+          'selected'
+        );
       });
 
+      button.classList.add('active');
+
+      render();
     });
+
+  });
 }
 
 // ==========================================
@@ -925,12 +1094,15 @@ function setupEventClicks() {
   if (!eventsEl) return;
 
   eventsEl.addEventListener('click', event => {
-    const card = event.target.closest('.event-card');
+
+    const card =
+      event.target.closest('.event-card');
 
     if (!card) return;
 
     const selectedEvent = allEvents.find(
-      item => String(item.id) === String(card.dataset.id)
+      item =>
+        String(item.id) === String(card.dataset.id)
     );
 
     if (selectedEvent) {
@@ -939,16 +1111,24 @@ function setupEventClicks() {
   });
 
   eventsEl.addEventListener('keydown', event => {
-    if (event.key !== 'Enter' && event.key !== ' ') return;
 
-    const card = event.target.closest('.event-card');
+    if (
+      event.key !== 'Enter' &&
+      event.key !== ' '
+    ) {
+      return;
+    }
+
+    const card =
+      event.target.closest('.event-card');
 
     if (!card) return;
 
     event.preventDefault();
 
     const selectedEvent = allEvents.find(
-      item => String(item.id) === String(card.dataset.id)
+      item =>
+        String(item.id) === String(card.dataset.id)
     );
 
     if (selectedEvent) {
@@ -962,27 +1142,40 @@ function setupEventClicks() {
 // ==========================================
 
 function setupButtons() {
-  const profileButton = document.querySelector('#profileBtn');
+
+  const profileButton =
+    document.querySelector('#profileBtn');
 
   if (profileButton) {
-    profileButton.addEventListener('click', accountAccess);
+    profileButton.addEventListener(
+      'click',
+      accountAccess
+    );
   }
 
-  const organizer = document.querySelector('#organizerBtn');
+  const organizer =
+    document.querySelector('#organizerBtn');
 
   if (organizer) {
-    organizer.addEventListener('click', requestOrganizer);
+    organizer.addEventListener(
+      'click',
+      requestOrganizer
+    );
   }
 
   document.querySelectorAll('[data-close]')
     .forEach(button => {
+
       button.addEventListener('click', () => {
-        const dialog = button.closest('dialog');
+
+        const dialog =
+          button.closest('dialog');
 
         if (dialog && dialog.open) {
           dialog.close();
         }
       });
+
     });
 }
 
@@ -991,12 +1184,22 @@ function setupButtons() {
 // ==========================================
 
 async function setupApp() {
+
+  if (appInitialized) return;
+
+  appInitialized = true;
+
   console.log('Iniciando Fiestas Gauchas...');
 
-  eventsEl = document.querySelector('#events');
+  eventsEl =
+    document.querySelector('#events');
 
   if (!eventsEl) {
-    console.error('No se encontró el contenedor de eventos.');
+    console.error(
+      'No se encontró el contenedor de eventos.'
+    );
+
+    appInitialized = false;
     return;
   }
 
@@ -1009,17 +1212,30 @@ async function setupApp() {
   setupButtons();
 
   await updateAccountButton();
+
   await checkAdmin();
 
   await loadEvents();
 
+  console.log(
+    'Fiestas Gauchas cargada correctamente.'
+  );
+}
 
 // ==========================================
 // INICIAR CUANDO CARGUE EL DOCUMENTO
 // ==========================================
 
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', setupApp);
+
+  document.addEventListener(
+    'DOMContentLoaded',
+    setupApp,
+    { once: true }
+  );
+
 } else {
+
   setupApp();
+
 }
